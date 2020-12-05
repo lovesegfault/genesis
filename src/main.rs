@@ -8,9 +8,9 @@ struct Chromosome {
 
 impl Chromosome {
     fn random(len: usize) -> Self {
-        let seed = std::iter::repeat(()).map(|_| random()).take(len).collect();
-
-        Chromosome { solution: seed }
+        Chromosome {
+            solution: std::iter::repeat_with(|| random()).take(len).collect(),
+        }
     }
 
     fn distance(&self, goal: &[u8]) -> u32 {
@@ -98,8 +98,7 @@ fn main() {
     let generation_size = 50;
     let parents_survive = generation_size / 10;
 
-    let mut parents: Vec<Chromosome> = std::iter::repeat(())
-        .map(|_| Chromosome::random(goal.len()))
+    let mut parents: Vec<Chromosome> = std::iter::repeat_with(|| Chromosome::random(goal.len()))
         .take(generation_size)
         .collect();
     let mut children: Vec<Chromosome> = Vec::with_capacity(generation_size);
