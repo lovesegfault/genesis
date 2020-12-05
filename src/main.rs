@@ -16,7 +16,7 @@ impl Chromosome {
     }
 
     fn distance(&self, goal: &[u8]) -> u32 {
-        triple_accel::levenshtein_exp(&self.solution, goal)
+        triple_accel::hamming(&self.solution, goal)
     }
 
     fn mutate(&mut self) {
