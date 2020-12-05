@@ -127,9 +127,6 @@ fn main() {
             .flat_map(|(a, b)| rayon::iter::once(a).chain(rayon::iter::once(b)))
             .map(|mut c| {
                 c.mutate();
-                c
-            })
-            .map(|c| {
                 let score = c.distance(&goal);
                 (c, score)
             })
