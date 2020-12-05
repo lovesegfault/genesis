@@ -9,7 +9,9 @@ struct Chromosome {
 impl Chromosome {
     fn random(len: usize) -> Self {
         Chromosome {
-            solution: std::iter::repeat_with(|| random()).take(len).collect(),
+            solution: std::iter::repeat_with(|| thread_rng().gen_range(32, 127))
+                .take(len)
+                .collect(),
         }
     }
 
