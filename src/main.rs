@@ -136,6 +136,7 @@ fn main() {
         std::mem::swap(&mut parents, &mut children);
         children.clear();
 
+        pb.set_message(&format!("Champion: {}", parents[0].0));
         pb.inc(1);
     }
 
