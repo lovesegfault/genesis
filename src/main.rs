@@ -87,13 +87,11 @@ fn main() {
     let pb = ProgressBar::new_spinner();
     pb.set_style(
         ProgressStyle::default_spinner()
-            .tick_strings(&["⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"])
-            .template("{spinner:.blue} | {elapsed} | {msg:!}"),
+            .tick_strings(&["◜", "◠", "◝", "◞", "◡", "◟"])
+            .template("{spinner:.blue} | {elapsed_precise} | {per_sec} | {wide_msg}"),
     );
 
-    let goal: Vec<u8> = b"
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat, libero eget faucibus consequat, orci erat ornare neque, faucibus iaculis sapien nunc vitae arcu.
-    ".to_vec();
+    let goal: Vec<u8> = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat, libero eget faucibus consequat, orci erat ornare neque, faucibus iaculis sapien nunc vitae arcu.".to_vec();
     let generation_size = 50;
     let parents_survive = generation_size / 10;
 
@@ -110,7 +108,7 @@ fn main() {
     for generation in 0.. {
         if let Some(result) = parents.iter().find(|(_, score)| *score == 0) {
             pb.finish_with_message(&format!(
-                "Gen: {} | Best: {}",
+                "{} | {}",
                 generation,
                 result.0.to_string().escape_default()
             ));
@@ -144,7 +142,7 @@ fn main() {
         children.clear();
 
         pb.set_message(&format!(
-            "Gen: {} | Best: {}",
+            "{} | {}",
             generation,
             parents[0].0.to_string().escape_default()
         ));
