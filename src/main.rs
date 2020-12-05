@@ -82,10 +82,10 @@ impl Mul for Chromosome {
 }
 
 fn main() {
-    use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
+    use indicatif::{ProgressBar, ProgressStyle};
     use rayon::prelude::*;
 
-    let generations = 100_000;
+    let generations = 10_000;
 
     let t = "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {percent}% ({eta})";
     let s = ProgressStyle::default_bar().template(t);
@@ -100,7 +100,7 @@ fn main() {
         .collect();
     let mut children: Vec<Chromosome> = Vec::with_capacity(generation_size);
 
-    for _ in (0..generations).progress_with(pb) {
+    for _ in 0..generations {
         parents.par_sort_unstable_by_key(|c| c.distance(&goal));
 
         // copy the most successful ones
@@ -129,7 +129,8 @@ fn main() {
         children.extend_from_slice(prospects.drain(0..remainder).as_slice());
         std::mem::swap(&mut parents, &mut children);
         children.clear();
+        pb.inc(1);
     }
 
-    println!("{}", parents[0]);
+    pb.println(&format!("{}", parents[0]));
 }
