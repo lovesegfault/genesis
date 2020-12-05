@@ -23,7 +23,7 @@ impl Chromosome {
         let mut rng = thread_rng();
 
         let index_distribution = Uniform::from(0..self.solution.len());
-        let rand_maybe = Uniform::from(0..100).sample(&mut rng);
+        let rand_maybe = rng.gen_range(0, 100);
 
         if rand_maybe <= 20 {
             self.solution[index_distribution.sample(&mut rng)] = rng.gen();
@@ -47,18 +47,15 @@ impl Mul for Chromosome {
     type Output = (Self, Self);
 
     fn mul(self, rhs: Self) -> Self::Output {
-        use rand::distributions::Uniform;
-
         let mut father = self.solution;
         let mut mother = rhs.solution;
 
         assert_eq!(father.len(), mother.len());
         let len = father.len();
 
-        let distribution = Uniform::from(0..len);
         let mut rng = thread_rng();
-        let cut_a: usize = distribution.sample(&mut rng);
-        let cut_b: usize = distribution.sample(&mut rng);
+        let cut_a: usize = rng.gen_range(0, len);
+        let cut_b: usize = rng.gen_range(0, len);
         let min = cut_a.min(cut_b);
         let max = cut_a.max(cut_b);
 
