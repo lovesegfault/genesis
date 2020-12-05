@@ -88,11 +88,12 @@ fn main() {
     pb.set_style(
         ProgressStyle::default_spinner()
             .tick_strings(&["⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"])
-            .template("{spinner:.blue} | {elapsed} | {msg}"),
+            .template("{spinner:.blue} | {elapsed} | {msg:!}"),
     );
 
-    let goal: Vec<u8> =
-        b"My name is Bernardo, my wife's name is Anya and we live in Berkeley, California".to_vec();
+    let goal: Vec<u8> = b"
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat, libero eget faucibus consequat, orci erat ornare neque, faucibus iaculis sapien nunc vitae arcu.
+    ".to_vec();
     let generation_size = 50;
     let parents_survive = generation_size / 10;
 
