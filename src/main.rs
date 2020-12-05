@@ -25,12 +25,12 @@ impl Chromosome {
         let index_distribution = Uniform::from(0..self.solution.len());
         let rand_maybe = rng.gen_range(0, 100);
 
-        if rand_maybe <= 20 {
+        if rand_maybe <= 40 {
             self.solution[index_distribution.sample(&mut rng)] = random();
             self.solution[index_distribution.sample(&mut rng)] = random();
         }
 
-        if rand_maybe <= 7 {
+        if rand_maybe <= 14 {
             self.solution.shuffle(&mut rng);
         }
     }
