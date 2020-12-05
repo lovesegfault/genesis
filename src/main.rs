@@ -36,6 +36,18 @@ impl Chromosome {
     }
 }
 
+impl From<Chromosome> for String {
+    fn from(c: Chromosome) -> String {
+        String::from_utf8(
+            c.solution
+                .into_iter()
+                .flat_map(|c| std::ascii::escape_default(c))
+                .collect(),
+        )
+        .unwrap()
+    }
+}
+
 impl std::fmt::Display for Chromosome {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(fmt, "\"{}\"", String::from_utf8_lossy(&self.solution))
@@ -84,13 +96,15 @@ fn main() {
     use indicatif::{ProgressBar, ProgressStyle};
     use rayon::prelude::*;
 
-    let max_generations = 100_000_000;
+    let pb = ProgressBar::new_spinner();
+    pb.set_style(
+        ProgressStyle::default_spinner()
+            .tick_strings(&["⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"])
+            .template("{spinner:.blue} | {elapsed} | {msg}"),
+    );
 
-    let t = "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {msg} {percent}% ({eta})";
-    let s = ProgressStyle::default_bar().template(t);
-    let pb = ProgressBar::new(max_generations).with_style(s);
-
-    let goal: Vec<u8> = b"Hello, World!".to_vec();
+    let goal: Vec<u8> =
+        b"My name is Bernardo, my wife's name is Anya and we live in Berkeley, California".to_vec();
     let generation_size = 50;
     let parents_survive = generation_size / 10;
 
@@ -104,9 +118,13 @@ fn main() {
             .collect();
     let mut children: Vec<(Chromosome, u32)> = Vec::with_capacity(generation_size);
 
-    for _ in 0..max_generations {
+    for generation in 0.. {
         if let Some(result) = parents.iter().find(|(_, score)| *score == 0) {
-            pb.finish_with_message(&format!("{}", result.0));
+            pb.finish_with_message(&format!(
+                "Gen: {} | Best: {}",
+                generation,
+                String::from(result.0.clone())
+            ));
             return;
         }
         parents.par_sort_unstable_by(|a, b| a.1.cmp(&b.1));
@@ -137,11 +155,10 @@ fn main() {
         children.clear();
 
         pb.set_message(&format!(
-            "Champion: {}",
-            parents[0].0.to_string().escape_default()
+            "Gen: {} | Best: {}",
+            generation,
+            String::from(parents[0].0.clone())
         ));
         pb.inc(1);
     }
-
-    pb.finish_with_message(&format!("{}", parents[0].0));
 }
