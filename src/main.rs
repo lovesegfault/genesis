@@ -113,7 +113,6 @@ fn main() {
         parents.par_sort_unstable_by(|a, b| a.1.cmp(&b.1));
 
         // copy the most successful ones
-        // N.B. this copies them over in reverse order.
         children.extend_from_slice(&parents[0..parents_survive]);
 
         // pair parents up
