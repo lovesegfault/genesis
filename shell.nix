@@ -8,6 +8,7 @@ in
       clippy
       rustfmt
       cargo-edit
+      cargo-udeps
       rust-analyzer
       linuxPackages_latest.perf
     ];
