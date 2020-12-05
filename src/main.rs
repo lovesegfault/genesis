@@ -30,7 +30,7 @@ impl Chromosome {
             self.solution[index_distribution.sample(&mut rng)] = random();
         }
 
-        if rand_maybe <= 5 {
+        if rand_maybe <= 7 {
             self.solution.shuffle(&mut rng);
         }
     }
