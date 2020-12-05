@@ -73,11 +73,11 @@ impl Mul for Chromosome {
         mother.rotate_left(max);
         father.rotate_left(max);
 
-        son[max..len].copy_from_slice(&mut father.drain(0..(len - max)).as_slice());
-        son[0..min].copy_from_slice(&mut father.drain(0..min).as_slice());
+        son[max..len].copy_from_slice(father.drain(0..(len - max)).as_slice());
+        son[0..min].copy_from_slice(father.drain(0..min).as_slice());
 
-        daughter[max..len].copy_from_slice(&mut mother.drain(0..(len - max)).as_slice());
-        daughter[0..min].copy_from_slice(&mut mother.drain(0..min).as_slice());
+        daughter[max..len].copy_from_slice(mother.drain(0..(len - max)).as_slice());
+        daughter[0..min].copy_from_slice(mother.drain(0..min).as_slice());
 
         (
             Chromosome { solution: son },
