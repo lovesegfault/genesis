@@ -85,11 +85,11 @@ fn main() {
     use indicatif::{ProgressBar, ProgressStyle};
     use rayon::prelude::*;
 
-    let generations = 100_000;
+    let max_generations = 100_000_000;
 
     let t = "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {msg} {percent}% ({eta})";
     let s = ProgressStyle::default_bar().template(t);
-    let pb = ProgressBar::new(generations).with_style(s);
+    let pb = ProgressBar::new(max_generations).with_style(s);
 
     let goal: Vec<u8> = b"Hello, World!".to_vec();
     let generation_size = 50;
@@ -105,7 +105,7 @@ fn main() {
             .collect();
     let mut children: Vec<(Chromosome, u32)> = Vec::with_capacity(generation_size);
 
-    for _ in 0..generations {
+    for _ in 0..max_generations {
         if let Some(result) = parents.iter().find(|(_, score)| *score == 0) {
             pb.finish_with_message(&format!("{}", result.0));
             return;
