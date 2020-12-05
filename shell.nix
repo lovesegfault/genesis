@@ -5,11 +5,11 @@ in
     pname = "genesis";
     buildInputs = with pkgs; [
       cargo
-      clippy
-      rustfmt
       cargo-edit
       cargo-udeps
-      rust-analyzer
+      clippy
       linuxPackages_latest.perf
+      rust-analyzer
+      rustfmt
     ];
   }
