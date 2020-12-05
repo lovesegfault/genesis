@@ -30,9 +30,8 @@ impl Chromosome {
             self.solution[index_distribution.sample(&mut rng)] = rng.gen_range(32, 127);
         }
 
-        if rand_maybe <= 2 {
-            self.solution[index_distribution.sample(&mut rng)] = rng.gen_range(32, 127);
-            self.solution[index_distribution.sample(&mut rng)] = rng.gen_range(32, 127);
+        if rand_maybe <= 5 {
+            self.solution.shuffle(&mut rng);
         }
     }
 }
