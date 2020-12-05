@@ -114,10 +114,7 @@ fn main() {
 
         // copy the most successful ones
         // N.B. this copies them over in reverse order.
-        parents
-            .iter()
-            .take(parents_survive)
-            .for_each(|p| children.push((*p).clone()));
+        children.extend_from_slice(&parents[0..parents_survive]);
 
         // pair parents up
         // FIXME: These should be picked with their scores in mind, but I got stuck trying to use
