@@ -94,7 +94,7 @@ impl Mul for Chromosome {
 
 fn main() {
     let generations = 100_000;
-    let goal: Vec<u8> = b"hello world".to_vec();
+    let goal: Vec<u8> = b"Hello, World!".to_vec();
     let generation_size = 50;
     let parents_survive = generation_size / 10;
 
@@ -104,13 +104,7 @@ fn main() {
         .collect();
     let mut children: Vec<Chromosome> = Vec::with_capacity(generation_size);
 
-    for g in 0..generations {
-        // print!("Generation: {} | Scores: ", g);
-        // parents
-        //     .iter()
-        //     .for_each(|p| print!("{}, ", p.distance(&goal)));
-        // print!("\n");
-
+    for _ in 0..generations {
         parents.sort_by_key(|c| c.distance(&goal));
 
         // copy the most successful ones
@@ -141,5 +135,5 @@ fn main() {
         children.clear();
     }
 
-    parents.iter().for_each(|c| println!("{}\n", c));
+    println!("{}", parents[0]);
 }
