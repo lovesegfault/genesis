@@ -36,18 +36,6 @@ impl Chromosome {
     }
 }
 
-impl From<Chromosome> for String {
-    fn from(c: Chromosome) -> String {
-        String::from_utf8(
-            c.solution
-                .into_iter()
-                .flat_map(|c| std::ascii::escape_default(c))
-                .collect(),
-        )
-        .unwrap()
-    }
-}
-
 impl std::fmt::Display for Chromosome {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(fmt, "\"{}\"", String::from_utf8_lossy(&self.solution))
@@ -123,7 +111,7 @@ fn main() {
             pb.finish_with_message(&format!(
                 "Gen: {} | Best: {}",
                 generation,
-                String::from(result.0.clone())
+                result.0.to_string().escape_default()
             ));
             return;
         }
@@ -157,7 +145,7 @@ fn main() {
         pb.set_message(&format!(
             "Gen: {} | Best: {}",
             generation,
-            String::from(parents[0].0.clone())
+            parents[0].0.to_string().escape_default()
         ));
         pb.inc(1);
     }
