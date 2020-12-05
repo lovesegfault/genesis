@@ -9,9 +9,7 @@ struct Chromosome {
 impl Chromosome {
     fn random(len: usize) -> Self {
         Chromosome {
-            solution: std::iter::repeat_with(|| thread_rng().gen_range(32, 127))
-                .take(len)
-                .collect(),
+            solution: std::iter::repeat_with(|| random()).take(len).collect(),
         }
     }
 
@@ -28,8 +26,8 @@ impl Chromosome {
         let rand_maybe = rng.gen_range(0, 100);
 
         if rand_maybe <= 20 {
-            self.solution[index_distribution.sample(&mut rng)] = rng.gen_range(32, 127);
-            self.solution[index_distribution.sample(&mut rng)] = rng.gen_range(32, 127);
+            self.solution[index_distribution.sample(&mut rng)] = random();
+            self.solution[index_distribution.sample(&mut rng)] = random();
         }
 
         if rand_maybe <= 5 {
@@ -138,7 +136,10 @@ fn main() {
         std::mem::swap(&mut parents, &mut children);
         children.clear();
 
-        pb.set_message(&format!("Champion: {}", parents[0].0));
+        pb.set_message(&format!(
+            "Champion: {}",
+            parents[0].0.to_string().escape_default()
+        ));
         pb.inc(1);
     }
 
