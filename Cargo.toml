@@ -8,4 +8,5 @@ edition = "2018"
 
 [dependencies]
 rand = "0.7.3"
+rayon = "1.5.0"
 triple_accel = "0.3.4"

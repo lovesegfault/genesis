@@ -4,18 +4,15 @@ use std::ops::Mul;
 #[derive(Clone, Debug)]
 struct Chromosome {
     solution: Vec<u8>,
-    rng: ThreadRng,
 }
+
+unsafe impl Send for Chromosome {}
 
 impl Chromosome {
     fn random(len: usize) -> Self {
-        let mut rng = thread_rng();
-        let seed = std::iter::repeat(()).map(|_| rng.gen()).take(len).collect();
+        let seed = std::iter::repeat(()).map(|_| random()).take(len).collect();
 
-        Chromosome {
-            solution: seed,
-            rng,
-        }
+        Chromosome { solution: seed }
     }
 
     fn distance(&self, goal: &[u8]) -> u32 {
@@ -25,17 +22,19 @@ impl Chromosome {
     fn mutate(&mut self) {
         use rand::distributions::Uniform;
 
+        let mut rng = thread_rng();
+
         let index_distribution = Uniform::from(0..self.solution.len());
-        let rand_maybe = Uniform::from(0..100).sample(&mut self.rng);
+        let rand_maybe = Uniform::from(0..100).sample(&mut rng);
 
         if rand_maybe <= 20 {
-            self.solution[index_distribution.sample(&mut self.rng)] = self.rng.gen();
-            self.solution[index_distribution.sample(&mut self.rng)] = self.rng.gen();
+            self.solution[index_distribution.sample(&mut rng)] = rng.gen();
+            self.solution[index_distribution.sample(&mut rng)] = rng.gen();
         }
 
         if rand_maybe <= 2 {
-            self.solution[index_distribution.sample(&mut self.rng)] = self.rng.gen();
-            self.solution[index_distribution.sample(&mut self.rng)] = self.rng.gen();
+            self.solution[index_distribution.sample(&mut rng)] = rng.gen();
+            self.solution[index_distribution.sample(&mut rng)] = rng.gen();
         }
     }
 }
@@ -49,7 +48,7 @@ impl std::fmt::Display for Chromosome {
 impl Mul for Chromosome {
     type Output = (Self, Self);
 
-    fn mul(mut self, mut rhs: Self) -> Self::Output {
+    fn mul(self, rhs: Self) -> Self::Output {
         use rand::distributions::Uniform;
 
         let mut father = self.solution;
@@ -59,8 +58,9 @@ impl Mul for Chromosome {
         let len = father.len();
 
         let distribution = Uniform::from(0..len);
-        let cut_a: usize = distribution.sample(&mut self.rng);
-        let cut_b: usize = distribution.sample(&mut rhs.rng);
+        let mut rng = thread_rng();
+        let cut_a: usize = distribution.sample(&mut rng);
+        let cut_b: usize = distribution.sample(&mut rng);
         let min = cut_a.min(cut_b);
         let max = cut_a.max(cut_b);
 
@@ -80,19 +80,15 @@ impl Mul for Chromosome {
         daughter[0..min].copy_from_slice(&mut mother.drain(0..min).as_slice());
 
         (
-            Chromosome {
-                solution: son,
-                rng: self.rng,
-            },
-            Chromosome {
-                solution: daughter,
-                rng: rhs.rng,
-            },
+            Chromosome { solution: son },
+            Chromosome { solution: daughter },
         )
     }
 }
 
 fn main() {
+    use rayon::prelude::*;
+
     let generations = 100_000;
     let goal: Vec<u8> = b"Hello, World!".to_vec();
     let generation_size = 50;
@@ -105,7 +101,7 @@ fn main() {
     let mut children: Vec<Chromosome> = Vec::with_capacity(generation_size);
 
     for _ in 0..generations {
-        parents.sort_by_key(|c| c.distance(&goal));
+        parents.par_sort_unstable_by_key(|c| c.distance(&goal));
 
         // copy the most successful ones
         // N.B. this copies them over in reverse order.
@@ -121,13 +117,13 @@ fn main() {
 
         // FIXME: this is disgusting
         let mut prospects = parents
-            .chunks_exact(2)
+            .par_chunks_exact(2)
             .map(|p| p[0].clone() * p[1].clone())
-            .flat_map(|(a, b)| std::iter::once(a).chain(std::iter::once(b)))
+            .flat_map(|(a, b)| rayon::iter::once(a).chain(rayon::iter::once(b)))
             .collect::<Vec<Chromosome>>();
         prospects.shuffle(&mut rng);
 
-        prospects.iter_mut().for_each(|p| p.mutate());
+        prospects.par_iter_mut().for_each(|p| p.mutate());
 
         let remainder = generation_size - parents_survive;
         children.extend_from_slice(prospects.drain(0..remainder).as_slice());
