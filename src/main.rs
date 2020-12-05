@@ -119,6 +119,7 @@ fn main() {
         // rand::distributions::WeightedIndex, so they are just picked at random.
         // FIXME: this is disgusting
         let remainder = generation_size - parents_survive;
+        parents.shuffle(&mut thread_rng());
         let mut prospects: Vec<(Chromosome, u32)> = parents
             .par_chunks_exact(2)
             .map(|p| p[0].0.clone() * p[1].0.clone())
