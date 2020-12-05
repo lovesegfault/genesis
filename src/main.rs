@@ -95,13 +95,18 @@ fn main() {
     let generation_size = 50;
     let parents_survive = generation_size / 10;
 
-    let mut parents: Vec<Chromosome> = std::iter::repeat_with(|| Chromosome::random(goal.len()))
-        .take(generation_size)
-        .collect();
-    let mut children: Vec<Chromosome> = Vec::with_capacity(generation_size);
+    let mut parents: Vec<(Chromosome, u32)> =
+        std::iter::repeat_with(|| Chromosome::random(goal.len()))
+            .take(generation_size)
+            .map(|c| {
+                let score = c.distance(&goal);
+                (c, score)
+            })
+            .collect();
+    let mut children: Vec<(Chromosome, u32)> = Vec::with_capacity(generation_size);
 
     for _ in 0..generations {
-        parents.par_sort_unstable_by_key(|c| c.distance(&goal));
+        parents.par_sort_unstable_by(|a, b| a.1.cmp(&b.1));
 
         // copy the most successful ones
         // N.B. this copies them over in reverse order.
@@ -116,21 +121,27 @@ fn main() {
         let mut rng = thread_rng();
 
         // FIXME: this is disgusting
-        let mut prospects = parents
+        let remainder = generation_size - parents_survive;
+        let mut prospects: Vec<(Chromosome, u32)> = parents
             .par_chunks_exact(2)
-            .map(|p| p[0].clone() * p[1].clone())
+            .map(|p| p[0].0.clone() * p[1].0.clone())
             .flat_map(|(a, b)| rayon::iter::once(a).chain(rayon::iter::once(b)))
-            .collect::<Vec<Chromosome>>();
+            .map(|mut c| {
+                c.mutate();
+                c
+            })
+            .map(|c| {
+                let score = c.distance(&goal);
+                (c, score)
+            })
+            .collect();
         prospects.shuffle(&mut rng);
 
-        prospects.par_iter_mut().for_each(|p| p.mutate());
-
-        let remainder = generation_size - parents_survive;
         children.extend_from_slice(prospects.drain(0..remainder).as_slice());
         std::mem::swap(&mut parents, &mut children);
         children.clear();
         pb.inc(1);
     }
 
-    pb.println(&format!("{}", parents[0]));
+    pb.println(&format!("{}", parents[0].0));
 }
