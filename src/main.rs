@@ -6,8 +6,6 @@ struct Chromosome {
     solution: Vec<u8>,
 }
 
-unsafe impl Send for Chromosome {}
-
 impl Chromosome {
     fn random(len: usize) -> Self {
         let seed = std::iter::repeat(()).map(|_| random()).take(len).collect();
