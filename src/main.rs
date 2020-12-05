@@ -26,13 +26,13 @@ impl Chromosome {
         let rand_maybe = rng.gen_range(0, 100);
 
         if rand_maybe <= 20 {
-            self.solution[index_distribution.sample(&mut rng)] = rng.gen();
-            self.solution[index_distribution.sample(&mut rng)] = rng.gen();
+            self.solution[index_distribution.sample(&mut rng)] = rng.gen_range(32, 127);
+            self.solution[index_distribution.sample(&mut rng)] = rng.gen_range(32, 127);
         }
 
         if rand_maybe <= 2 {
-            self.solution[index_distribution.sample(&mut rng)] = rng.gen();
-            self.solution[index_distribution.sample(&mut rng)] = rng.gen();
+            self.solution[index_distribution.sample(&mut rng)] = rng.gen_range(32, 127);
+            self.solution[index_distribution.sample(&mut rng)] = rng.gen_range(32, 127);
         }
     }
 }
