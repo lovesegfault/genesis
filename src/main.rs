@@ -9,7 +9,7 @@ struct Chromosome {
 impl Chromosome {
     fn random(len: usize) -> Self {
         Chromosome {
-            solution: std::iter::repeat_with(|| random()).take(len).collect(),
+            solution: std::iter::repeat_with(random).take(len).collect(),
         }
     }
 
@@ -86,8 +86,7 @@ fn main() {
 
     let pb = ProgressBar::new_spinner();
     pb.set_style(
-        ProgressStyle::default_spinner()
-            .template("{elapsed_precise} | {per_sec} | {wide_msg}"),
+        ProgressStyle::default_spinner().template("{elapsed_precise} | {per_sec} | {wide_msg}"),
     );
 
     let goal: Vec<u8> = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse feugiat, libero eget faucibus consequat, orci erat ornare neque, faucibus iaculis sapien nunc vitae arcu.".to_vec();
