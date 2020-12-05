@@ -85,9 +85,9 @@ fn main() {
     use indicatif::{ProgressBar, ProgressStyle};
     use rayon::prelude::*;
 
-    let generations = 10_000;
+    let generations = 100_000;
 
-    let t = "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {percent}% ({eta})";
+    let t = "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {msg} {percent}% ({eta})";
     let s = ProgressStyle::default_bar().template(t);
     let pb = ProgressBar::new(generations).with_style(s);
 
@@ -106,6 +106,10 @@ fn main() {
     let mut children: Vec<(Chromosome, u32)> = Vec::with_capacity(generation_size);
 
     for _ in 0..generations {
+        if let Some(result) = parents.iter().find(|(_, score)| *score == 0) {
+            pb.finish_with_message(&format!("{}", result.0));
+            return;
+        }
         parents.par_sort_unstable_by(|a, b| a.1.cmp(&b.1));
 
         // copy the most successful ones
@@ -118,8 +122,6 @@ fn main() {
         // pair parents up
         // FIXME: These should be picked with their scores in mind, but I got stuck trying to use
         // rand::distributions::WeightedIndex, so they are just picked at random.
-        let mut rng = thread_rng();
-
         // FIXME: this is disgusting
         let remainder = generation_size - parents_survive;
         let mut prospects: Vec<(Chromosome, u32)> = parents
@@ -135,13 +137,14 @@ fn main() {
                 (c, score)
             })
             .collect();
-        prospects.shuffle(&mut rng);
+        prospects.shuffle(&mut thread_rng());
 
         children.extend_from_slice(prospects.drain(0..remainder).as_slice());
         std::mem::swap(&mut parents, &mut children);
         children.clear();
+
         pb.inc(1);
     }
 
-    pb.println(&format!("{}", parents[0].0));
+    pb.finish_with_message(&format!("{}", parents[0].0));
 }
