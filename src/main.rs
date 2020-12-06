@@ -1,6 +1,4 @@
 use rand::prelude::*;
-use std::cmp::Ordering;
-use std::ops::Mul;
 
 static GOAL: &[u8] = b"
 Twas brillig, and the slithy toves
@@ -56,59 +54,9 @@ impl Chromosome {
         triple_accel::hamming(a, &GOAL)
     }
 
-    fn mutate(&mut self) {
-        use rand::distributions::Uniform;
-
-        let mut rng = thread_rng();
-
-        let mut mutated = self.solution.clone();
-        let index_distribution = Uniform::from(0..self.solution.len());
-        let rand_maybe = rng.gen_range(0, 100);
-
-        if rand_maybe <= 80 {
-            mutated[index_distribution.sample(&mut rng)] = random();
-            mutated[index_distribution.sample(&mut rng)] = random();
-        }
-
-        let mutate_cost = Self::hamming(&mutated);
-
-        if mutate_cost < self.cost || rand_maybe < 20 {
-            self.solution = mutated;
-            self.cost = mutate_cost;
-        }
-    }
-}
-
-impl std::fmt::Display for Chromosome {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(fmt, "\"{}\"", String::from_utf8_lossy(&self.solution))
-    }
-}
-
-impl PartialOrd for Chromosome {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cost.cmp(&other.cost))
-    }
-}
-
-impl Ord for Chromosome {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.cost.cmp(&other.cost)
-    }
-}
-
-impl PartialEq for Chromosome {
-    fn eq(&self, other: &Self) -> bool {
-        self.cost == other.cost
-    }
-}
-
-impl Mul for Chromosome {
-    type Output = (Self, Self);
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        let mut father = self.solution;
-        let mut mother = rhs.solution;
+    fn crossover(&self, other: &Self) -> (Self, Self) {
+        let mut father = self.solution.clone();
+        let mut mother = other.solution.clone();
 
         assert_eq!(father.len(), mother.len());
         let len = father.len();
@@ -151,6 +99,52 @@ impl Mul for Chromosome {
 
         (son, daughter)
     }
+
+    fn mutate(&mut self) {
+        use rand::distributions::Uniform;
+
+        let mut rng = thread_rng();
+
+        let mut mutated = self.solution.clone();
+        let index_distribution = Uniform::from(0..self.solution.len());
+        let rand_maybe = rng.gen_range(0, 100);
+
+        if rand_maybe <= 80 {
+            mutated[index_distribution.sample(&mut rng)] = random();
+            mutated[index_distribution.sample(&mut rng)] = random();
+        }
+
+        let mutate_cost = Self::hamming(&mutated);
+
+        if mutate_cost < self.cost || rand_maybe < 20 {
+            self.solution = mutated;
+            self.cost = mutate_cost;
+        }
+    }
+}
+
+impl std::fmt::Display for Chromosome {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(fmt, "\"{}\"", String::from_utf8_lossy(&self.solution))
+    }
+}
+
+impl PartialOrd for Chromosome {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cost.cmp(&other.cost))
+    }
+}
+
+impl Ord for Chromosome {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.cost.cmp(&other.cost)
+    }
+}
+
+impl PartialEq for Chromosome {
+    fn eq(&self, other: &Self) -> bool {
+        self.cost == other.cost
+    }
 }
 
 fn main() {
@@ -190,7 +184,7 @@ fn main() {
         parents.shuffle(&mut rng);
         let mut prospects: Vec<Chromosome> = parents
             .par_chunks_exact(2)
-            .map(|p| p[0].clone() * p[1].clone())
+            .map(|p| p[0].crossover(&p[1]))
             .flat_map(|(a, b)| rayon::iter::once(a).chain(rayon::iter::once(b)))
             .collect();
         prospects.shuffle(&mut rng);
