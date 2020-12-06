@@ -96,7 +96,7 @@ impl<'g> Chromosome<'g> {
 
 impl std::fmt::Display for Chromosome<'_> {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(fmt, "\"{}\"", String::from_utf8_lossy(&self.solution))
+        write!(fmt, "{}", String::from_utf8_lossy(&self.solution))
     }
 }
 
