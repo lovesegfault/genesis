@@ -134,6 +134,7 @@ All mimsy were the borogoves,
             })
             .collect();
     let mut children: Vec<(Chromosome, u32)> = Vec::with_capacity(generation_size);
+    let mut rng = thread_rng();
 
     for generation in 0.. {
         if let Some(result) = parents.iter().find(|(_, score)| *score == 0) {
@@ -154,7 +155,7 @@ All mimsy were the borogoves,
         // rand::distributions::WeightedIndex, so they are just picked at random.
         // FIXME: this is disgusting
         let remainder = generation_size - parents_survive;
-        parents.shuffle(&mut thread_rng());
+        parents.shuffle(&mut rng);
         let mut prospects: Vec<(Chromosome, u32)> = parents
             .par_chunks_exact(2)
             .map(|p| p[0].0.clone() * p[1].0.clone())
@@ -165,7 +166,7 @@ All mimsy were the borogoves,
                 (c, score)
             })
             .collect();
-        prospects.shuffle(&mut thread_rng());
+        prospects.shuffle(&mut rng);
 
         children.extend_from_slice(prospects.drain(0..remainder).as_slice());
         std::mem::swap(&mut parents, &mut children);
