@@ -4,7 +4,7 @@ static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 mod chromosome;
 
 use chromosome::Chromosome;
-use rand::prelude::*;
+use rand::{distributions::WeightedIndex, prelude::*};
 
 static GOAL: &[u8] = b"
 Twas brillig, and the slithy toves
@@ -73,8 +73,6 @@ fn main() {
         children.extend_from_slice(&parents[0..parents_survive]);
 
         // pair parents up
-        use rand::distributions::WeightedIndex;
-
         let remainder = generation_size - parents_survive;
         let cost: Vec<f64> = parents.iter().map(|c| 1.0 / (c.cost as f64)).collect();
         let dist = WeightedIndex::new(&cost).unwrap();
