@@ -137,16 +137,19 @@ impl Mul for Chromosome {
         let son_cost = Chromosome::hamming(&son);
         let daughter_cost = Chromosome::hamming(&daughter);
 
-        (
-            Chromosome {
-                solution: son,
-                cost: son_cost,
-            },
-            Chromosome {
-                solution: daughter,
-                cost: daughter_cost,
-            },
-        )
+        let mut son = Chromosome {
+            solution: son,
+            cost: son_cost,
+        };
+        let mut daughter = Chromosome {
+            solution: daughter,
+            cost: daughter_cost,
+        };
+
+        son.mutate();
+        daughter.mutate();
+
+        (son, daughter)
     }
 }
 
@@ -189,10 +192,6 @@ fn main() {
             .par_chunks_exact(2)
             .map(|p| p[0].clone() * p[1].clone())
             .flat_map(|(a, b)| rayon::iter::once(a).chain(rayon::iter::once(b)))
-            .map(|mut c| {
-                c.mutate();
-                c
-            })
             .collect();
         prospects.shuffle(&mut rng);
 
