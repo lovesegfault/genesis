@@ -10,5 +10,8 @@ in
       linuxPackages_latest.perf
       rust-analyzer
       rustfmt
+
+      niv
+      nixpkgs-fmt
     ];
   }
