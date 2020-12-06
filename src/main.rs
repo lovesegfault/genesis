@@ -164,7 +164,6 @@ fn main() {
         .take(generation_size)
         .collect();
     let mut children: Vec<Chromosome> = Vec::with_capacity(generation_size);
-    let mut rng = thread_rng();
 
     for generation in 0.. {
         if let Some(result) = parents.iter().find(|c| c.cost == 0) {
@@ -184,18 +183,21 @@ fn main() {
         let cost: Vec<f64> = parents.iter().map(|c| 1.0 / (c.cost as f64)).collect();
         let dist = WeightedIndex::new(&cost).unwrap();
 
-        for _ in 0..((remainder / 2) + 1) {
-            let a = dist.sample(&mut rng);
-            let mut b = dist.sample(&mut rng);
-            while a == b {
-                b = dist.sample(&mut rng);
-            }
+        children.par_extend(
+            (0..(remainder / 2))
+                .into_par_iter()
+                .map(|_| {
+                    let mut local_rng = thread_rng();
+                    let a = dist.sample(&mut local_rng);
+                    let mut b = dist.sample(&mut local_rng);
+                    while a == b {
+                        b = dist.sample(&mut local_rng);
+                    }
 
-            let (son, daughter) = parents[a].crossover(&parents[b]);
-
-            children.push(son);
-            children.push(daughter);
-        }
+                    parents[a].crossover(&parents[b])
+                })
+                .flat_map(|(a, b)| rayon::iter::once(a).chain(rayon::iter::once(b))),
+        );
 
         std::mem::swap(&mut parents, &mut children);
         children.clear();
