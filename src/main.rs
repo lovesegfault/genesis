@@ -156,7 +156,8 @@ fn main() {
         ProgressStyle::default_spinner().template("{elapsed_precise} | {per_sec} | {wide_msg}"),
     );
 
-    let generation_size = 128;
+    let generation_size = 8192;
+    assert_eq!(generation_size % 2, 0);
     let parents_survive = generation_size / 10;
 
     let mut parents: Vec<Chromosome> = std::iter::repeat_with(|| Chromosome::random(GOAL.len()))
