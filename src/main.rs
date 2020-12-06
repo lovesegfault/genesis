@@ -1,3 +1,6 @@
+#[global_allocator]
+static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
 use rand::prelude::*;
 
 static GOAL: &[u8] = b"

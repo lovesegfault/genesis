@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 indicatif = { version = "0.15.0", features = ["improved_unicode"] }
+jemallocator = "0.3.2"
 rand = "0.7.3"
 rayon = "1.5.0"
 triple_accel = "0.3.4"
