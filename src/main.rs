@@ -170,11 +170,8 @@ fn main() {
 
     for generation in 0.. {
         if let Some(result) = parents.iter().find(|c| c.cost == 0) {
-            pb.finish_with_message(&format!(
-                "{} | {}",
-                generation,
-                result.to_string().escape_default()
-            ));
+            pb.finish();
+            println!("{}", result.to_string());
             return;
         }
 
