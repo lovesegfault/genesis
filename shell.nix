@@ -1,17 +1,17 @@
 let
-  pkgs = import <nixpkgs> { };
+  pkgs = import ./nix;
 in
-  pkgs.mkShell {
-    pname = "genesis";
-    buildInputs = with pkgs; [
-      cargo
-      cargo-edit
-      clippy
-      linuxPackages_latest.perf
-      rust-analyzer
-      rustfmt
+pkgs.mkShell {
+  pname = "genesis";
+  buildInputs = with pkgs; [
+    cargo
+    cargo-edit
+    clippy
+    linuxPackages_latest.perf
+    rust-analyzer
+    rustfmt
 
-      niv
-      nixpkgs-fmt
-    ];
-  }
+    niv
+    nixpkgs-fmt
+  ];
+}
