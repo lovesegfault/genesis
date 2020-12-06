@@ -177,19 +177,25 @@ fn main() {
         children.extend_from_slice(&parents[0..parents_survive]);
 
         // pair parents up
-        // FIXME: These should be picked with their scores in mind, but I got stuck trying to use
-        // rand::distributions::WeightedIndex, so they are just picked at random.
-        // FIXME: this is disgusting
-        let remainder = generation_size - parents_survive;
-        parents.shuffle(&mut rng);
-        let mut prospects: Vec<Chromosome> = parents
-            .par_chunks_exact(2)
-            .map(|p| p[0].crossover(&p[1]))
-            .flat_map(|(a, b)| rayon::iter::once(a).chain(rayon::iter::once(b)))
-            .collect();
-        prospects.shuffle(&mut rng);
+        use rand::distributions::WeightedIndex;
 
-        children.extend_from_slice(prospects.drain(0..remainder).as_slice());
+        let remainder = generation_size - parents_survive;
+        let cost: Vec<f64> = parents.iter().map(|c| 1.0 / (c.cost as f64)).collect();
+        let dist = WeightedIndex::new(&cost).unwrap();
+
+        for _ in 0..((remainder / 2) + 1) {
+            let a = dist.sample(&mut rng);
+            let mut b = dist.sample(&mut rng);
+            while a == b {
+                b = dist.sample(&mut rng);
+            }
+
+            let (son, daughter) = parents[a].crossover(&parents[b]);
+
+            children.push(son);
+            children.push(daughter);
+        }
+
         std::mem::swap(&mut parents, &mut children);
         children.clear();
 
