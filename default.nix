@@ -2,7 +2,7 @@
 let
   pkgs = import ./nix;
   genesis = { naersk, gitignoreSource }: naersk.buildPackage {
-    pname = "genesis";
+    name = "genesis";
     src = gitignoreSource ./.;
   };
 in
