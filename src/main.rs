@@ -4,63 +4,51 @@ static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 mod chromosome;
 
 use chromosome::Chromosome;
+use indicatif::{ProgressBar, ProgressStyle};
 use rand::{distributions::WeightedIndex, prelude::*};
+use rayon::prelude::*;
+use std::io::{stdin, Read};
+use std::path::PathBuf;
+use structopt::StructOpt;
 
-static GOAL: &[u8] = b"
-Twas brillig, and the slithy toves
-      Did gyre and gimble in the wabe:
-All mimsy were the borogoves,
-      And the mome raths outgrabe.
-
-\"Beware the Jabberwock, my son!
-      The jaws that bite, the claws that catch!
-Beware the Jubjub bird, and shun
-      The frumious Bandersnatch!\"
-
-He took his vorpal sword in hand;
-      Long time the manxome foe he sought-
-So rested he by the Tumtum tree
-      And stood awhile in thought.
-
-And, as in uffish thought he stood,
-      The Jabberwock, with eyes of flame,
-Came whiffling through the tulgey wood,
-      And burbled as it came!
-
-One, two! One, two! And through and through
-      The vorpal blade went snicker-snack!
-He left it dead, and with its head
-      He went galumphing back.
-
-\"And hast thou slain the Jabberwock?
-      Come to my arms, my beamish boy!
-O frabjous day! Callooh! Callay!\"
-      He chortled in his joy.
-
-'Twas brillig, and the slithy toves
-      Did gyre and gimble in the wabe:
-All mimsy were the borogoves,
-      And the mome raths outgrabe.
-";
+#[derive(Debug, StructOpt)]
+#[structopt(name = "genesis", about = "A genetic approach to guessing strings.")]
+struct Opt {
+    #[structopt(short, long, default_value = "4096")]
+    generation_size: usize,
+    #[structopt(short, long, default_value = "0.1")]
+    parent_survival_rate: f64,
+    #[structopt(default_value = "-")]
+    text_file: PathBuf,
+}
 
 fn main() {
-    use indicatif::{ProgressBar, ProgressStyle};
-    use rayon::prelude::*;
+    let opt = Opt::from_args();
 
-    let pb = ProgressBar::new_spinner();
-    pb.set_style(
+    assert_eq!(opt.generation_size % 2, 0);
+    assert!((0.0..1.0).contains(&opt.parent_survival_rate));
+    let parents_survive = opt.generation_size / (opt.parent_survival_rate * 100.0) as usize;
+
+    let goal = if opt.text_file == PathBuf::from("-") {
+        let mut input = String::new();
+        stdin().read_to_string(&mut input).unwrap();
+        input
+    } else {
+        let mut file = std::fs::File::open(opt.text_file).unwrap();
+        let mut text = String::new();
+        file.read_to_string(&mut text).unwrap();
+        text
+    };
+
+    let mut parents: Vec<Chromosome> =
+        std::iter::repeat_with(|| Chromosome::random(goal.as_bytes()))
+            .take(opt.generation_size)
+            .collect();
+    let mut children: Vec<Chromosome> = Vec::with_capacity(opt.generation_size);
+
+    let pb = ProgressBar::new_spinner().with_style(
         ProgressStyle::default_spinner().template("{elapsed_precise} | {per_sec} | {wide_msg}"),
     );
-
-    let generation_size = 4096;
-    assert_eq!(generation_size % 2, 0);
-    let parents_survive = generation_size / 10;
-
-    let mut parents: Vec<Chromosome> = std::iter::repeat_with(|| Chromosome::random(&GOAL))
-        .take(generation_size)
-        .collect();
-    let mut children: Vec<Chromosome> = Vec::with_capacity(generation_size);
-
     for generation in 0.. {
         if let Some(result) = parents.iter().find(|c| c.cost == 0) {
             pb.finish();
@@ -73,7 +61,7 @@ fn main() {
         children.extend_from_slice(&parents[0..parents_survive]);
 
         // pair parents up
-        let remainder = generation_size - parents_survive;
+        let remainder = opt.generation_size - parents_survive;
         let cost: Vec<f64> = parents.iter().map(|c| 1.0 / (c.cost as f64)).collect();
         let dist = WeightedIndex::new(&cost).unwrap();
 
