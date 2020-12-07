@@ -69,7 +69,7 @@ impl<'g> Chromosome<'g> {
         // Fill the remaining gaps in the children with elements from the parents,
         // starting from the portion following the transplanted section
         let max_gap = len - max;
-        let min_gap = max_gap - min;
+        let min_gap = max_gap + min;
 
         son[max..len].copy_from_slice(&father[0..max_gap]);
         son[0..min].copy_from_slice(&father[max_gap..min_gap]);
