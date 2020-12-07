@@ -1,4 +1,4 @@
-# genesis
+# dada
 
 This is a simple genetic algorithm that evolves to match some text. It has no
 practical usage that I'm aware of, and exists solely as a toy for me to play

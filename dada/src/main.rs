@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "genesis", about = "A genetic approach to guessing strings.")]
+#[structopt(name = "dada", about = "A genetic approach to guessing strings.")]
 struct Opt {
     #[structopt(short, long, default_value = "4096")]
     generation_size: usize,
