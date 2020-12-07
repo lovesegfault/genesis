@@ -27,7 +27,7 @@ impl<'g> Chromosome<'g> {
         let mut father = self.solution.clone();
         let mut mother = other.solution.clone();
 
-        assert_eq!(father.len(), mother.len());
+        debug_assert_eq!(father.len(), mother.len());
         let len = father.len();
 
         let mut rng = thread_rng();
