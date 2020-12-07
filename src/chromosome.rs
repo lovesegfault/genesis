@@ -34,12 +34,19 @@ impl<'g> Chromosome<'g> {
     }
 
     pub fn crossover(&self, other: &Self) -> (Self, Self) {
+        // First we clone the father and mother strings.
+        // We only need to clone so that we can rotate later. I'd like to get rid of this.
         let mut father = self.solution.clone();
         let mut mother = other.solution.clone();
 
         debug_assert_eq!(father.len(), mother.len());
         let len = father.len();
 
+        // Now we pick two random cutting points which will be identical for the father and mother
+        // e.g. 'Twas brill|ig, and the slithy |toves
+        // | denotes the cut
+        // min = 11
+        // max = 31
         let mut rng = thread_rng();
         let mut min: usize = rng.gen_range(0, len);
         let mut max: usize = rng.gen_range(0, len);
@@ -50,12 +57,17 @@ impl<'g> Chromosome<'g> {
         let mut son = vec![0; len];
         let mut daughter = vec![0; len];
 
+        // The chunk of text between the cut points is copied verbatim to the children
         son[min..max].copy_from_slice(&mother[min..max]);
         daughter[min..max].copy_from_slice(&father[min..max]);
 
+        // We now rotate the vec so the first character is the one immediately following the last
+        // cut
         mother.rotate_left(max);
         father.rotate_left(max);
 
+        // Fill the remaining gaps in the children with elements from the parents,
+        // starting from the portion following the transplanted section
         let max_gap = len - max;
         let min_gap = max_gap - min;
 
@@ -68,6 +80,7 @@ impl<'g> Chromosome<'g> {
         let mut son = Chromosome::new(son, self.goal);
         let mut daughter = Chromosome::new(daughter, self.goal);
 
+        // Lastly, we randomly mutate the children before returning
         son.mutate();
         daughter.mutate();
 
