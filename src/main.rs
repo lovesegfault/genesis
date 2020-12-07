@@ -30,6 +30,7 @@ fn main() {
     let parents_survive = opt.generation_size / (opt.parent_survival_rate * 100.0) as usize;
 
     let goal = if opt.text_file == PathBuf::from("-") {
+        eprintln!("Reading from stdin");
         let mut input = String::new();
         stdin().read_to_string(&mut input).unwrap();
         input
