@@ -5,7 +5,7 @@ practical usage that I'm aware of, and exists solely as a toy for me to play
 with genetic algorithms.
 
 The algorithm implemented is roughly what's described in the paper
-["Path Planning for a UAVPerforming Reconnaissance ofStatic Ground Targets in Terrain"][obermeyer-2009].
+["Path Planning for a UAV Performing Reconnaissance of Static Ground Targets in Terrain"][obermeyer-2009].
 The core differences are that it allows for repeated elements in the solutions,
 and that the mutation probability is different.
 
