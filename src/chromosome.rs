@@ -31,10 +31,11 @@ impl<'g> Chromosome<'g> {
         let len = father.len();
 
         let mut rng = thread_rng();
-        let cut_a: usize = rng.gen_range(0, len);
-        let cut_b: usize = rng.gen_range(0, len);
-        let min = cut_a.min(cut_b);
-        let max = cut_a.max(cut_b);
+        let mut min: usize = rng.gen_range(0, len);
+        let mut max: usize = rng.gen_range(0, len);
+        if min > max {
+            std::mem::swap(&mut min, &mut max);
+        }
 
         let mut son = vec![0; len];
         let mut daughter = vec![0; len];
