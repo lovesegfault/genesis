@@ -82,8 +82,17 @@ impl<'g> Chromosome<'g> {
         let rand_maybe = rng.gen_range(0, 100);
 
         if rand_maybe <= 80 {
-            mutated[index_distribution.sample(&mut rng)] = random();
-            mutated[index_distribution.sample(&mut rng)] = random();
+            for _ in 0..3 {
+                mutated[index_distribution.sample(&mut rng)] = random();
+            }
+        }
+
+        if rand_maybe <= 2 {
+            if rand_maybe % 2 == 0 {
+                mutated.rotate_right(1);
+            } else {
+                mutated.rotate_left(1);
+            }
         }
 
         let mutate_cost = Self::distance(&mutated, self.goal);
