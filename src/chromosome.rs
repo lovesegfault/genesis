@@ -56,11 +56,11 @@ impl<'g> Chromosome<'g> {
         mother.rotate_left(max);
         father.rotate_left(max);
 
-        son[max..len].copy_from_slice(father.drain(0..(len - max)).as_slice());
-        son[0..min].copy_from_slice(father.drain(0..min).as_slice());
+        son[max..len].copy_from_slice(&father[0..(len - max)]);
+        son[0..min].copy_from_slice(&father[(len - max)..(len - max + min)]);
 
-        daughter[max..len].copy_from_slice(mother.drain(0..(len - max)).as_slice());
-        daughter[0..min].copy_from_slice(mother.drain(0..min).as_slice());
+        daughter[max..len].copy_from_slice(&mother[0..(len - max)]);
+        daughter[0..min].copy_from_slice(&mother[(len - max)..(len - max + min)]);
 
         let mut son = Chromosome::new(son, self.goal);
         let mut daughter = Chromosome::new(daughter, self.goal);
