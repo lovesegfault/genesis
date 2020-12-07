@@ -63,7 +63,11 @@ fn main() {
         // pair parents up
         let remainder = opt.generation_size - parents_survive;
         let cost: Vec<f64> = parents.iter().map(|c| 1.0 / (c.cost as f64)).collect();
-        let dist = WeightedIndex::new(&cost).unwrap();
+        let dist = WeightedIndex::new(&cost).unwrap_or_else(|_| unsafe {
+            // SAFETY: This can only panic when a weight is negative. We know the cost is always positive,
+            // and 1 / (n > 0) is never < 0.
+            std::hint::unreachable_unchecked();
+        });
 
         children.par_extend(
             (0..(remainder / 2))
