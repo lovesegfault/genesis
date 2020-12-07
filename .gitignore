@@ -1,5 +1,5 @@
-/target
+**/perf.data*
+**/result
+**/result-*
+**/target
 .direnv/
-perf.data*
-result
-result-*
