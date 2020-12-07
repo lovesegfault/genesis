@@ -1,4 +1,26 @@
 use rand::prelude::*;
+use std::ops::Range;
+
+fn copy_slice_rotated<T: Copy>(
+    src: &[T],
+    left_rotation: usize,
+    Range { start, end }: Range<usize>,
+    dst: &mut [T],
+) {
+    let len = src.len();
+    let gap = end - start;
+    let rot_start = (start + left_rotation) % len;
+    let rot_end = rot_start + gap;
+
+    if rot_end <= len {
+        dst.copy_from_slice(&src[rot_start..rot_end]);
+    } else {
+        let first = &src[rot_start..];
+        let second = &src[..(rot_end % len)];
+        dst[..first.len()].copy_from_slice(first);
+        dst[first.len()..].copy_from_slice(second);
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct Chromosome<'g> {
@@ -36,8 +58,8 @@ impl<'g> Chromosome<'g> {
     pub fn crossover(&self, other: &Self) -> (Self, Self) {
         // First we clone the father and mother strings.
         // We only need to clone so that we can rotate later. I'd like to get rid of this.
-        let mut father = self.solution.clone();
-        let mut mother = other.solution.clone();
+        let father = &self.solution;
+        let mother = &other.solution;
 
         debug_assert_eq!(father.len(), mother.len());
         let len = father.len();
@@ -50,6 +72,9 @@ impl<'g> Chromosome<'g> {
         let mut rng = thread_rng();
         let mut min: usize = rng.gen_range(0, len);
         let mut max: usize = rng.gen_range(0, len);
+        while min == max {
+            max = rng.gen_range(0, len);
+        }
         if min > max {
             std::mem::swap(&mut min, &mut max);
         }
@@ -61,21 +86,18 @@ impl<'g> Chromosome<'g> {
         son[min..max].copy_from_slice(&mother[min..max]);
         daughter[min..max].copy_from_slice(&father[min..max]);
 
-        // We now rotate the vec so the first character is the one immediately following the last
-        // cut
-        mother.rotate_left(max);
-        father.rotate_left(max);
-
-        // Fill the remaining gaps in the children with elements from the parents,
-        // starting from the portion following the transplanted section
+        // We fill the remaining gaps in the children as if the parent slice was rotated. To avoid
+        // mutating the parent slice, we use this bespoke copy_slice_rotated
+        let rot_left = max;
         let max_gap = len - max;
         let min_gap = max_gap + min;
 
-        son[max..len].copy_from_slice(&father[0..max_gap]);
-        son[0..min].copy_from_slice(&father[max_gap..min_gap]);
-
-        daughter[max..len].copy_from_slice(&mother[0..max_gap]);
-        daughter[0..min].copy_from_slice(&mother[max_gap..min_gap]);
+        // Fill the remaining gaps in the children with elements from the parents,
+        // starting from the portion following the transplanted section
+        copy_slice_rotated(&father, rot_left, 0..max_gap, &mut son[max..len]);
+        copy_slice_rotated(&father, rot_left, max_gap..min_gap, &mut son[0..min]);
+        copy_slice_rotated(&mother, rot_left, 0..max_gap, &mut daughter[max..len]);
+        copy_slice_rotated(&mother, rot_left, max_gap..min_gap, &mut daughter[0..min]);
 
         let mut son = Chromosome::new(son, self.goal);
         let mut daughter = Chromosome::new(daughter, self.goal);
