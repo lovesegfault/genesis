@@ -8,6 +8,16 @@ pub struct Chromosome<'g> {
 }
 
 impl<'g> Chromosome<'g> {
+    #[inline]
+    pub fn new(solution: Vec<u8>, goal: &'g [u8]) -> Self {
+        let cost = Self::distance(&solution, goal);
+        Chromosome {
+            solution,
+            cost,
+            goal,
+        }
+    }
+
     pub fn random(goal: &'g [u8]) -> Self {
         let solution: Vec<u8> = std::iter::repeat_with(random).take(goal.len()).collect();
         let cost = Self::distance(&solution, goal);
@@ -52,19 +62,8 @@ impl<'g> Chromosome<'g> {
         daughter[max..len].copy_from_slice(mother.drain(0..(len - max)).as_slice());
         daughter[0..min].copy_from_slice(mother.drain(0..min).as_slice());
 
-        let son_cost = Self::distance(&son, self.goal);
-        let daughter_cost = Self::distance(&daughter, self.goal);
-
-        let mut son = Chromosome {
-            solution: son,
-            cost: son_cost,
-            goal: self.goal,
-        };
-        let mut daughter = Chromosome {
-            solution: daughter,
-            cost: daughter_cost,
-            goal: self.goal,
-        };
+        let mut son = Chromosome::new(son, self.goal);
+        let mut daughter = Chromosome::new(daughter, self.goal);
 
         son.mutate();
         daughter.mutate();
@@ -72,6 +71,7 @@ impl<'g> Chromosome<'g> {
         (son, daughter)
     }
 
+    #[inline]
     fn mutate(&mut self) {
         use rand::distributions::Uniform;
 
