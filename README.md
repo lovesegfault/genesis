@@ -20,6 +20,9 @@ There is only one mandatory argument, the path to the file containing the text
 you want the algorithm to evolve towards. If not specified, the input will be
 assumed to be stdin.
 
+There are some sample texts in the [samples](./samples) folder for you to start
+playing with.
+
 ## limitations
 The most expensive operation is the distance computation between a chromosome's
 solution and the goal text, which here is the hamming distance. In order to
