@@ -37,3 +37,4 @@ aware of that implements hamming distance like that, and building such is out of
 scope for my weekend project.
 
 [obermeyer-2009]: https://karlobermeyer.github.io/publications/obermeyer.ga_for_reconn_uav.2009.pdf
+[triple_accel]: https://github.com/Daniel-Liu-c0deb0t/triple_accel
