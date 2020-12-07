@@ -87,14 +87,6 @@ impl<'g> Chromosome<'g> {
             }
         }
 
-        if rand_maybe <= 2 {
-            if rand_maybe % 2 == 0 {
-                mutated.rotate_right(1);
-            } else {
-                mutated.rotate_left(1);
-            }
-        }
-
         let mutate_cost = Self::distance(&mutated, self.goal);
 
         if mutate_cost < self.cost || rand_maybe < 20 {
