@@ -56,6 +56,7 @@ fn main() {
         let mut children: Vec<Chromosome> = Vec::with_capacity(generation_size);
 
         loop {
+            pb.set_message(&parents[0].to_string().escape_default().to_string());
             // copy the most successful ones
             parents.par_sort_unstable();
             children.extend_from_slice(&parents[0..parents_survive]);
