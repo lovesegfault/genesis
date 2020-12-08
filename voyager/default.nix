@@ -10,6 +10,7 @@ pkgs.callPackage
     , libxkbcommon
     , naersk
     , pkg-config
+    , vulkan-loader
     , wayland
     , xorg
     }: naersk.buildPackage rec {
@@ -19,11 +20,12 @@ pkgs.callPackage
       nativeBuildInputs = [ pkg-config ];
       buildInputs = [
         libxkbcommon
+        vulkan-loader
         wayland
         xorg.libX11
         xorg.libXcursor
-        xorg.libXrandr
         xorg.libXi
+        xorg.libXrandr
       ];
 
       singleStep = true;

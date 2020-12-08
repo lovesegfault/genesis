@@ -5,6 +5,7 @@ authors = ["Bernardo Meurer <bernardo@meurer.org>"]
 edition = "2018"
 
 [dependencies]
+euclid = "0.22.1"
 pixels = "0.2.0"
 raqote = { version = "0.8.0", default-features = false }
 winit = "0.23.0"
