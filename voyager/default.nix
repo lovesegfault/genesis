@@ -8,12 +8,13 @@ pkgs.callPackage
     , gitignoreSource
     , xorg
     , pkg-config
+    , wayland
     }: naersk.buildPackage {
       name = "voyager";
       src = gitignoreSource ./.;
 
       nativeBuildInputs = [ pkg-config ];
-      buildInputs = [ xorg.libX11 ];
+      buildInputs = [ wayland xorg.libX11 ];
     }
   )
   args
