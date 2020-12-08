@@ -7,7 +7,9 @@ edition = "2018"
 [dependencies]
 euclid = "0.22.1"
 pixels = "0.2.0"
+rand = "0.7.3"
 raqote = { version = "0.8.0", default-features = false }
+rayon = "1.5.0"
 winit = "0.23.0"
 winit_input_helper = "0.8.0"
 

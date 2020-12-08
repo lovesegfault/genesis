@@ -1,3 +1,4 @@
+mod chromosome;
 mod map;
 
 use crate::map::Map;
