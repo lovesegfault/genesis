@@ -1,5 +1,8 @@
 [workspace]
-members = [ "dada" ]
+members = [
+    "dada",
+    "voyager"
+]
 
 [profile.release]
 lto = "fat"

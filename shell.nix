@@ -1,5 +1,6 @@
 let
   pkgs = import ./nix;
+  genesis = import ./. { };
 in
 pkgs.mkShell {
   pname = "genesis";
@@ -13,5 +14,5 @@ pkgs.mkShell {
 
     niv
     nixpkgs-fmt
-  ];
+  ] ++ genesis.buildInputs ++ genesis.nativeBuildInputs;
 }
