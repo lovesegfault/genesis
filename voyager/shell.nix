@@ -1,11 +1,14 @@
 let
   pkgs = import ../nix;
-  self = import ./. { };
+  super = import ./. { };
 in
 pkgs.mkShell {
-  name = self.name;
-  buildInputs = self.buildInputs ++ self.nativeBuildInputs ++ (with pkgs; [
+  name = super.name;
+
+  buildInputs = super.buildInputs ++ super.nativeBuildInputs ++ (with pkgs; [
     rust-analyzer
     cargo-edit
   ]);
+
+  LD_LIBRARY_PATH = super.libPath;
 }
