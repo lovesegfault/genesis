@@ -26,9 +26,19 @@
 
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
+            (fenixPkgs.complete.withComponents [
+              "cargo"
+              "clippy-preview"
+              "rust-src"
+              "rust-std"
+              "rustc"
+              "rustfmt-preview"
+            ])
+            fenixPkgs.rust-analyzer
+
             cargo-edit
             nixpkgs-fmt
-          ] ++ (with fenixPkgs; [ default.toolchain rust-analyzer ]);
+          ];
         };
       });
 }
