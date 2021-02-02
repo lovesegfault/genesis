@@ -1,16 +1,16 @@
-use crate::map::MapPoint;
+use crate::map::{Map, MapPoint};
 use rand::prelude::*;
 use rayon::prelude::*;
 
 #[derive(Clone, Debug)]
 pub struct Chromosome {
-    pub solution: Vec<MapPoint>,
+    pub solution: Map,
     pub score: f64,
 }
 
 impl Chromosome {
     #[inline]
-    pub fn new(solution: Vec<MapPoint>) -> Self {
+    pub fn new(solution: Map) -> Self {
         let score = Self::score(&solution);
         Chromosome { solution, score }
     }
@@ -68,11 +68,11 @@ impl Chromosome {
         mother.rotate_left(max);
 
         // remove from the parents points the children already have
-        let father: Vec<MapPoint> = father
+        let father: Map = father
             .into_par_iter()
             .filter(|v| daughter.contains(&v))
             .collect();
-        let mother: Vec<MapPoint> = mother
+        let mother: Map = mother
             .into_par_iter()
             .filter(|v| son.contains(&v))
             .collect();
