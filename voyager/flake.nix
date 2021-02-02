@@ -22,7 +22,10 @@
         }).buildPackage;
       in
       {
-        defaultPackage = naerskBuild { src = ./.; };
+        defaultPackage = naerskBuild {
+          src = ./.;
+          buildInputs = with pkgs; [ SDL2 ];
+        };
 
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
@@ -38,6 +41,8 @@
 
             cargo-edit
             nixpkgs-fmt
+            SDL2
+            SDL2_gfx
           ];
         };
       });
