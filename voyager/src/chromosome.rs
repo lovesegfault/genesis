@@ -47,10 +47,10 @@ impl Chromosome {
         // min = 11
         // max = 31
         let mut rng = thread_rng();
-        let mut min: usize = rng.gen_range(0, len);
-        let mut max: usize = rng.gen_range(0, len);
+        let mut min: usize = rng.gen_range(0..len);
+        let mut max: usize = rng.gen_range(0..len);
         while min == max {
-            max = rng.gen_range(0, len);
+            max = rng.gen_range(0..len);
         }
         if min > max {
             std::mem::swap(&mut min, &mut max);
@@ -108,7 +108,7 @@ impl Chromosome {
 
         let mut mutated = self.solution.clone();
         let index_distribution = Uniform::from(0..self.solution.len());
-        let rand_maybe = rng.gen_range(0, 100);
+        let rand_maybe = rng.gen_range(0..100);
 
         if rand_maybe <= 80 {
             for _ in 0..3 {
