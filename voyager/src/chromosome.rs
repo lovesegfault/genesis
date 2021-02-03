@@ -18,14 +18,13 @@ impl Chromosome {
     pub fn random(points: &[MapPoint]) -> Self {
         let mut solution = points.to_vec();
         solution.shuffle(&mut thread_rng());
-        let score = Self::score(&solution);
-        Chromosome::new(solution)
+        Chromosome::new(solution.into())
     }
 
     #[inline(always)]
     fn score(path: &[MapPoint]) -> f64 {
         let cost: f64 = path
-            .par_windows(2)
+            .windows(2)
             .map(|subpath| subpath[0].distance_to(subpath[1]))
             .sum();
         1.0 / cost
@@ -63,20 +62,6 @@ impl Chromosome {
         son[min..max].copy_from_slice(&mother[min..max]);
         daughter[min..max].copy_from_slice(&father[min..max]);
 
-        // Now rotate the father/mother so they start immediately following the max cut point
-        father.rotate_left(max);
-        mother.rotate_left(max);
-
-        // remove from the parents points the children already have
-        let father: Map = father
-            .into_par_iter()
-            .filter(|v| daughter.contains(&v))
-            .collect();
-        let mother: Map = mother
-            .into_par_iter()
-            .filter(|v| son.contains(&v))
-            .collect();
-
         // We fill the remaining gaps in the children as if the parent slice was rotated. To avoid
         // mutating the parent slice, we use this bespoke copy_slice_rotated
         let max_gap = len - max;
@@ -84,14 +69,13 @@ impl Chromosome {
 
         // Fill the remaining gaps in the children with elements from the parents,
         // starting from the portion following the transplanted section
+        // copy_slice_rotated(&father, rot_left, 0..max_gap, &mut son[max..len]);
+        // copy_slice_rotated(&father, rot_left, max_gap..min_gap, &mut son[0..min]);
+        // copy_slice_rotated(&mother, rot_left, 0..max_gap, &mut daughter[max..len]);
+        // copy_slice_rotated(&mother, rot_left, max_gap..min_gap, &mut daughter[0..min]);
 
-        son[max..len].copy_from_slice(&father[0..max_gap]);
-        son[0..min].copy_from_slice(&father[max_gap..min_gap]);
-        daughter[max..len].copy_from_slice(&mother[0..max_gap]);
-        daughter[0..min].copy_from_slice(&mother[max_gap..min_gap]);
-
-        let mut son = Chromosome::new(son);
-        let mut daughter = Chromosome::new(daughter);
+        let mut son = Chromosome::new(son.into());
+        let mut daughter = Chromosome::new(daughter.into());
 
         // Lastly, we randomly mutate the children before returning
         son.mutate();
