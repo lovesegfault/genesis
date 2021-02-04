@@ -1,4 +1,5 @@
 use crate::map::{Map, MapPoint};
+use itertools::Itertools;
 use rand::prelude::*;
 use rayon::prelude::*;
 
@@ -15,17 +16,21 @@ impl Chromosome {
         Chromosome { solution, score }
     }
 
-    pub fn random(points: &[MapPoint]) -> Self {
-        let mut solution = points.to_vec();
+    pub fn random(source: &Map) -> Self {
+        let mut solution = source.iter().collect::<Vec<_>>();
         solution.shuffle(&mut thread_rng());
-        Chromosome::new(solution.into())
+        let solution = solution.into_iter().copied().collect();
+        Chromosome::new(solution)
     }
 
     #[inline(always)]
-    fn score(path: &[MapPoint]) -> f64 {
+    fn score(path: &Map) -> f64 {
         let cost: f64 = path
-            .windows(2)
-            .map(|subpath| subpath[0].distance_to(subpath[1]))
+            .iter()
+            .map(|point| (point.x.into_inner(), point.y.into_inner()))
+            .map(|(x, y)| -> euclid::Point2D<f64, ()> { euclid::Point2D::new(x, y) })
+            .tuple_windows::<(_, _)>()
+            .map(|subpath| subpath.0.distance_to(subpath.1))
             .sum();
         1.0 / cost
     }
@@ -55,27 +60,14 @@ impl Chromosome {
             std::mem::swap(&mut min, &mut max);
         }
 
-        let mut son = vec![MapPoint::default(); len];
-        let mut daughter = vec![MapPoint::default(); len];
+        let mut son = Map::with_capacity(len);
+        let mut daughter = Map::with_capacity(len);
 
-        // The chunk of text between the cut points is copied verbatim to the children
-        son[min..max].copy_from_slice(&mother[min..max]);
-        daughter[min..max].copy_from_slice(&father[min..max]);
+        // son[min..max].copy_from_slice(&mother[min..max]);
+        // daughter[min..max].copy_from_slice(&father[min..max]);
 
-        // We fill the remaining gaps in the children as if the parent slice was rotated. To avoid
-        // mutating the parent slice, we use this bespoke copy_slice_rotated
-        let max_gap = len - max;
-        let min_gap = max_gap + min;
-
-        // Fill the remaining gaps in the children with elements from the parents,
-        // starting from the portion following the transplanted section
-        // copy_slice_rotated(&father, rot_left, 0..max_gap, &mut son[max..len]);
-        // copy_slice_rotated(&father, rot_left, max_gap..min_gap, &mut son[0..min]);
-        // copy_slice_rotated(&mother, rot_left, 0..max_gap, &mut daughter[max..len]);
-        // copy_slice_rotated(&mother, rot_left, max_gap..min_gap, &mut daughter[0..min]);
-
-        let mut son = Chromosome::new(son.into());
-        let mut daughter = Chromosome::new(daughter.into());
+        let mut son = Chromosome::new(son);
+        let mut daughter = Chromosome::new(daughter);
 
         // Lastly, we randomly mutate the children before returning
         son.mutate();
@@ -90,7 +82,6 @@ impl Chromosome {
 
         let mut rng = thread_rng();
 
-        let mut mutated = self.solution.clone();
         let index_distribution = Uniform::from(0..self.solution.len());
         let rand_maybe = rng.gen_range(0..100);
 
@@ -98,16 +89,12 @@ impl Chromosome {
             for _ in 0..3 {
                 let a = index_distribution.sample(&mut rng);
                 let b = index_distribution.sample(&mut rng);
-                mutated.swap(a, b);
+                // FIXME
+                // self.solution.swap(a, b);
             }
         }
 
-        let mutate_score = Self::score(&mutated);
-
-        if mutate_score > self.score || rand_maybe < 20 {
-            self.solution = mutated;
-            self.score = mutate_score;
-        }
+        self.score = Self::score(&self.solution);
     }
 }
 

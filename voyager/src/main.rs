@@ -2,6 +2,7 @@ mod chromosome;
 mod map;
 
 use chromosome::Chromosome;
+use itertools::Itertools;
 use rand::{distributions::WeightedIndex, prelude::*};
 use rayon::prelude::*;
 use sdl2::{event::Event, keyboard::Keycode, pixels::Color, rect::Rect};
@@ -22,18 +23,18 @@ const COLOR_PATH: Color = Color::RGBA(89, 194, 255, 255);
 // N.B. Trait hygiene means this (sadly) can't be a From impl
 fn point_to_rect(point: &map::MapPoint) -> Rect {
     Rect::new(
-        point.x as i32,
-        point.y as i32,
+        point.x.into_inner() as i32,
+        point.y.into_inner() as i32,
         GRID_CELL_SIZE as u32,
         GRID_CELL_SIZE as u32,
     )
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut travel_map = map::random_map(
+    let travel_map = map::random_map(
         (WINDOW_WIDTH - GRID_CELL_SIZE) as u32,
         (WINDOW_HEIGHT - GRID_CELL_SIZE) as u32,
-        20,
+        10,
     );
     let mut parents: Vec<Chromosome> = std::iter::repeat_with(|| Chromosome::random(&travel_map))
         .take(GENERATION_SIZE)
@@ -58,7 +59,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .position_centered()
         .build()?;
 
-    let mut canvas = window.into_canvas().build()?;
+    let mut canvas = window.into_canvas().accelerated().build()?;
 
     'running: loop {
         for event in event_pump.poll_iter() {
@@ -72,10 +73,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     keycode: Some(Keycode::Q),
                     ..
                 } => break 'running,
+                Event::KeyDown {
+                    keycode: Some(Keycode::S),
+                    ..
+                } => {}
                 _ => {}
             }
         }
-
         canvas.set_draw_color(COLOR_BACKGROUND);
         canvas.clear();
 
@@ -91,8 +95,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         parents[0]
             .solution
-            .windows(2)
-            .map(|p| (point_to_rect(&p[0]), point_to_rect(&p[1])))
+            .iter()
+            .tuple_windows::<(_, _)>()
+            .map(|p| (point_to_rect(&p.0), point_to_rect(&p.1)))
             .map(|p| (p.0.center(), p.1.center()))
             .map(|(a, b)| canvas.draw_line(a, b))
             .collect::<Result<(), String>>()?;

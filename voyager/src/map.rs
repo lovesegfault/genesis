@@ -1,12 +1,18 @@
 use euclid::Point2D;
+use fxhash::FxBuildHasher;
+use indexmap::IndexSet;
 use itertools::Itertools;
+use ordered_float::OrderedFloat;
 use rand::prelude::*;
 
 pub struct MapSpace;
 
-pub type MapPoint = Point2D<f64, MapSpace>;
+pub type MapUnit = OrderedFloat<f64>;
 
-pub type Map = Vec<MapPoint>;
+pub type MapPoint = Point2D<MapUnit, MapSpace>;
+
+pub type FxIndexSet<T> = IndexSet<T, FxBuildHasher>;
+pub type Map = IndexSet<MapPoint>;
 
 pub fn random_map(width: u32, height: u32, entities: usize) -> Map {
     let mut rng = thread_rng();
@@ -14,6 +20,8 @@ pub fn random_map(width: u32, height: u32, entities: usize) -> Map {
         .map(|(x, y)| (rng.gen_range(0..x), rng.gen_range(0..y)))
         .unique()
         .take(entities)
-        .map(|(x, y)| MapPoint::new(x as f64, y as f64))
-        .collect::<Vec<MapPoint>>()
+        .map(|(x, y)| (x as f64, y as f64))
+        .map(|(x, y)| (MapUnit::from(x), MapUnit::from(y)))
+        .map(|(x, y)| MapPoint::new(x, y))
+        .collect::<IndexSet<MapPoint>>()
 }
