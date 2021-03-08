@@ -128,6 +128,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         std::mem::swap(&mut parents, &mut children);
+        eprintln!("BEST: {}", parents[0].score);
         children.clear();
     }
     Ok(())
