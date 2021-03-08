@@ -101,7 +101,11 @@ impl Chromosome {
         let rand_maybe = rng.gen_range(0..100);
 
         if rand_maybe <= 80 {
-            for _ in 0..3 {
+            let swaps = match self.solution.len() / 4 {
+                0 => 2,
+                x => x,
+            };
+            for _ in 0..swaps {
                 let a = index_distribution.sample(&mut rng);
                 let b = index_distribution.sample(&mut rng);
                 self.solution.swap(a, b)
