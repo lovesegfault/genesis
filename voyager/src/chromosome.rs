@@ -31,7 +31,7 @@ impl Chromosome {
             .tuple_windows::<(_, _)>()
             .map(|subpath| subpath.0.distance_to(subpath.1))
             .sum();
-        1.0 / cost
+        cost
     }
 
     pub fn crossover(self, other: Self) -> (Self, Self) {
