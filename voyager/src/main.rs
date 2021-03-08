@@ -22,6 +22,9 @@ const COLOR_BACKGROUND: Color = Color::RGBA(10, 14, 20, 255);
 const COLOR_ENTITY: Color = Color::RGBA(230, 180, 80, 255);
 const COLOR_PATH: Color = Color::RGBA(89, 194, 255, 255);
 
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 // N.B. Trait hygiene means this (sadly) can't be a From impl
 fn point_to_rect(point: &map::MapPoint) -> Rect {
     Rect::new(

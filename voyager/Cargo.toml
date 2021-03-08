@@ -8,6 +8,7 @@ edition = "2018"
 euclid = "0.22.2"
 indicatif = { version = "0.15.0", features = ["improved_unicode"] }
 itertools = "0.10.0"
+mimalloc = { version = "0.1.25", default-features = false }
 ordered-float = "2.1.1"
 rand = "0.8.3"
 rayon = "1.5.0"
