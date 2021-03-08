@@ -4,6 +4,7 @@
     fenix = {
       url = "github:figsoda/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.naersk.follows = "naersk";
     };
     naersk = {
       url = "github:nmattia/naersk";
