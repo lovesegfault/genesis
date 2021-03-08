@@ -23,7 +23,8 @@ impl Chromosome {
 
     #[inline(always)]
     fn score(path: &Map) -> f64 {
-        path.0
+        let cost: f64 = path
+            .0
             .par_windows(2)
             .map(|window| {
                 fn repack_point<P: Into<f64>>(
@@ -36,7 +37,8 @@ impl Chromosome {
                 (repack_point(window[0]), repack_point(window[1]))
             })
             .map(|subpath| subpath.0.distance_to(subpath.1))
-            .sum()
+            .sum();
+        1.0 / cost
     }
 
     pub fn crossover(self, other: Self) -> (Self, Self) {

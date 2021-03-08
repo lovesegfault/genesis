@@ -121,11 +121,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         canvas.present();
 
-        parents.sort_unstable();
+        parents.par_sort_unstable_by(|a, b| a.cmp(b).reverse());
         children.extend_from_slice(&parents[0..PARENTS_SUVIVE]);
 
         let remainder = GENERATION_SIZE - PARENTS_SUVIVE;
-        let score: Vec<f64> = parents.iter().map(|c| 1.0 / (c.score as f64)).collect();
+        let score: Vec<f64> = parents.iter().map(|c| c.score).collect();
         let dist = WeightedIndex::new(&score)?;
 
         children.par_extend(
