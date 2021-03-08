@@ -1,18 +1,13 @@
 use euclid::Point2D;
-// use fxhash::FxBuildHasher;
-// use indexmap::IndexSet;
 use itertools::Itertools;
 use ordered_float::OrderedFloat;
 use rand::prelude::*;
 
 pub struct MapSpace;
-
 pub type MapUnit = OrderedFloat<f64>;
-
 pub type MapPoint = Point2D<MapUnit, MapSpace>;
-
-// pub type FxIndexSet<T> = IndexSet<T, FxBuildHasher>;
 pub type MapInner = Vec<MapPoint>;
+
 #[derive(Clone)]
 pub struct Map(pub MapInner);
 
