@@ -1,7 +1,6 @@
 use crate::map::{Map, MapPoint};
 use itertools::Itertools;
 use rand::prelude::*;
-// use rayon::prelude::*;
 
 #[derive(Clone, Debug)]
 pub struct Chromosome {
@@ -19,12 +18,13 @@ impl Chromosome {
     pub fn random(source: &Map) -> Self {
         let mut solution = source.iter().copied().collect::<Vec<_>>();
         solution.shuffle(&mut thread_rng());
-        Chromosome::new(solution)
+        Chromosome::new(solution.into())
     }
 
     #[inline(always)]
     fn score(path: &Map) -> f64 {
         let cost: f64 = path
+            .0
             .iter()
             .map(|point| (point.x.into_inner(), point.y.into_inner()))
             .map(|(x, y)| -> euclid::Point2D<f64, ()> { euclid::Point2D::new(x, y) })
@@ -34,7 +34,6 @@ impl Chromosome {
         1.0 / cost
     }
 
-    // FIXME: It'd be nice if we could just take a reference to the parents instead
     pub fn crossover(self, other: Self) -> (Self, Self) {
         // First we clone the father and mother strings.
         // We only need to clone so that we can rotate later. I'd like to get rid of this.
@@ -57,45 +56,33 @@ impl Chromosome {
         }
 
         // Prepare to construct the offsprint from the crossover
-        let mut son = vec![MapPoint::default(); len];
-        let mut daughter = vec![MapPoint::default(); len];
-
-        // Align the parents so we can drain the copy-over portion
-        father.rotate_left(min);
-        mother.rotate_left(min);
-        let drain_limit = max - min;
+        let mut son = Map::from(vec![MapPoint::default(); len]);
+        let mut daughter = Map::from(vec![MapPoint::default(); len]);
 
         // Copy the middle portions as-is
-        son[min..max].copy_from_slice(&mother.drain(0..drain_limit).as_slice());
-        daughter[min..max].copy_from_slice(&father.drain(0..drain_limit).as_slice());
+        son[min..max].copy_from_slice(&mother[min..max]);
+        daughter[min..max].copy_from_slice(&father[min..max]);
+
+        // Rotate parents so they start after the maximum cut-point
+        father.rotate_left(max);
+        mother.rotate_left(max);
 
         // Filter nodes already present in offspring from parents (swapped parents wrt the middle
         // copy)
-        dbg!(&father);
-        dbg!(&mother);
-        dbg!(&son);
-        dbg!(&daughter);
-        dbg!("filtering mids");
         father.retain(|point| !son.contains(point));
         mother.retain(|point| !daughter.contains(point));
-        dbg!("ok");
-        dbg!(&father);
-        dbg!(&mother);
 
         // Finally, copy over remaining nodes
-        // The lower portion
-        dbg!("copying upper");
-        son[0..min].copy_from_slice(&father.drain(0..min).as_slice());
-        daughter[0..min].copy_from_slice(&mother.drain(0..min).as_slice());
-        dbg!("ok");
         // The upper portion
-        dbg!("copying lower");
-        son[max..].copy_from_slice(&father.drain(..).as_slice());
-        son[max..].copy_from_slice(&mother.drain(..).as_slice());
-        dbg!("ok");
+        let upper_cut = len - max;
+        son[max..].copy_from_slice(&father.drain(0..upper_cut).as_slice());
+        daughter[max..].copy_from_slice(&mother.drain(0..upper_cut).as_slice());
+        // The lower portion
+        son[..min].copy_from_slice(&father.drain(..).as_slice());
+        daughter[..min].copy_from_slice(&mother.drain(..).as_slice());
 
-        let mut son = Chromosome::new(son);
-        let mut daughter = Chromosome::new(daughter);
+        let mut son = Chromosome::new(son.into());
+        let mut daughter = Chromosome::new(daughter.into());
 
         // Lastly, we randomly mutate the children before returning
         son.mutate();
@@ -110,7 +97,6 @@ impl Chromosome {
 
         let mut rng = thread_rng();
 
-        dbg!(self.solution.len());
         let index_distribution = Uniform::from(0..self.solution.len());
         let rand_maybe = rng.gen_range(0..100);
 
@@ -128,13 +114,7 @@ impl Chromosome {
 
 impl std::fmt::Display for Chromosome {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut iter = self.solution.iter();
-        let start = iter
-            .next()
-            .map(|p| format!("({}, {})", p.x, p.y))
-            .unwrap_or_else(|| "".to_string());
-        let repr = iter.fold(start, |acc, pt| format!("{} -> ({}, {})", acc, pt.x, pt.y));
-        write!(fmt, "{}", repr)
+        write!(fmt, "{}", self.solution)
     }
 }
 
