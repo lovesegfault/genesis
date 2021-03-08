@@ -88,18 +88,11 @@ impl Chromosome {
         son[..min].copy_from_slice(&father.drain(..).as_slice());
         daughter[..min].copy_from_slice(&mother.drain(..).as_slice());
 
-        let mut son = Chromosome::new(son);
-        let mut daughter = Chromosome::new(daughter);
-
-        // Lastly, we randomly mutate the children before returning
-        son.mutate();
-        daughter.mutate();
-
-        (son, daughter)
+        (son.into(), daughter.into())
     }
 
     #[inline]
-    fn mutate(&mut self) {
+    pub fn mutate(&mut self) {
         use rand::distributions::Uniform;
 
         let mut rng = thread_rng();
@@ -120,6 +113,12 @@ impl Chromosome {
         }
 
         self.score = Self::score(&self.solution);
+    }
+}
+
+impl From<Map> for Chromosome {
+    fn from(map: Map) -> Self {
+        Self::new(map)
     }
 }
 

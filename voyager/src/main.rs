@@ -143,7 +143,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         b = dist.sample(&mut local_rng);
                     }
 
-                    parents[a].clone().crossover(parents[b].clone())
+                    let (mut son, mut daughter) = parents[a].clone().crossover(parents[b].clone());
+                    son.mutate();
+                    daughter.mutate();
+                    (son, daughter)
                 })
                 .flat_map(|(a, b)| rayon::iter::once(a).chain(rayon::iter::once(b))),
         );
