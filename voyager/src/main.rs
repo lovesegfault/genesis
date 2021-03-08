@@ -4,7 +4,7 @@ mod map;
 use chromosome::Chromosome;
 use itertools::Itertools;
 use rand::{distributions::WeightedIndex, prelude::*};
-use rayon::prelude::*;
+// use rayon::prelude::*;
 use sdl2::{event::Event, keyboard::Keycode, pixels::Color, rect::Rect};
 
 const GENERATION_SIZE: usize = 256;
@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let travel_map = map::random_map(
         (WINDOW_WIDTH - GRID_CELL_SIZE) as u32,
         (WINDOW_HEIGHT - GRID_CELL_SIZE) as u32,
-        10,
+        3,
     );
     let mut parents: Vec<Chromosome> = std::iter::repeat_with(|| Chromosome::random(&travel_map))
         .take(GENERATION_SIZE)
@@ -111,9 +111,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let score: Vec<f64> = parents.iter().map(|c| 1.0 / (c.score as f64)).collect();
         let dist = WeightedIndex::new(&score)?;
 
-        children.par_extend(
+        children.extend(
             (0..(remainder / 2))
-                .into_par_iter()
+                .into_iter()
                 .map(|_| {
                     let mut local_rng = thread_rng();
                     let a = dist.sample(&mut local_rng);
@@ -124,7 +124,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                     parents[a].clone().crossover(parents[b].clone())
                 })
-                .flat_map(|(a, b)| rayon::iter::once(a).chain(rayon::iter::once(b))),
+                .flat_map(|(a, b)| std::iter::once(a).chain(std::iter::once(b))),
         );
 
         std::mem::swap(&mut parents, &mut children);

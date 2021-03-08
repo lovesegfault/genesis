@@ -1,7 +1,7 @@
 use crate::map::{Map, MapPoint};
 use itertools::Itertools;
 use rand::prelude::*;
-use rayon::prelude::*;
+// use rayon::prelude::*;
 
 #[derive(Clone, Debug)]
 pub struct Chromosome {
@@ -17,9 +17,8 @@ impl Chromosome {
     }
 
     pub fn random(source: &Map) -> Self {
-        let mut solution = source.iter().collect::<Vec<_>>();
+        let mut solution = source.iter().copied().collect::<Vec<_>>();
         solution.shuffle(&mut thread_rng());
-        let solution = solution.into_iter().copied().collect();
         Chromosome::new(solution)
     }
 
@@ -46,25 +45,54 @@ impl Chromosome {
         let len = father.len();
 
         // Now we pick two random cutting points which will be identical for the father and mother
-        // e.g. 'Twas brill|ig, and the slithy |toves
-        // | denotes the cut
-        // min = 11
-        // max = 31
         let mut rng = thread_rng();
-        let mut min: usize = rng.gen_range(0..len);
-        let mut max: usize = rng.gen_range(0..len);
+        let mut min: usize = 0;
+        let mut max: usize = 0;
         while min == max {
+            min = rng.gen_range(0..len);
             max = rng.gen_range(0..len);
         }
         if min > max {
             std::mem::swap(&mut min, &mut max);
         }
 
-        let mut son = Map::with_capacity(len);
-        let mut daughter = Map::with_capacity(len);
+        // Prepare to construct the offsprint from the crossover
+        let mut son = vec![MapPoint::default(); len];
+        let mut daughter = vec![MapPoint::default(); len];
 
-        // son[min..max].copy_from_slice(&mother[min..max]);
-        // daughter[min..max].copy_from_slice(&father[min..max]);
+        // Align the parents so we can drain the copy-over portion
+        father.rotate_left(min);
+        mother.rotate_left(min);
+        let drain_limit = max - min;
+
+        // Copy the middle portions as-is
+        son[min..max].copy_from_slice(&mother.drain(0..drain_limit).as_slice());
+        daughter[min..max].copy_from_slice(&father.drain(0..drain_limit).as_slice());
+
+        // Filter nodes already present in offspring from parents (swapped parents wrt the middle
+        // copy)
+        dbg!(&father);
+        dbg!(&mother);
+        dbg!(&son);
+        dbg!(&daughter);
+        dbg!("filtering mids");
+        father.retain(|point| !son.contains(point));
+        mother.retain(|point| !daughter.contains(point));
+        dbg!("ok");
+        dbg!(&father);
+        dbg!(&mother);
+
+        // Finally, copy over remaining nodes
+        // The lower portion
+        dbg!("copying upper");
+        son[0..min].copy_from_slice(&father.drain(0..min).as_slice());
+        daughter[0..min].copy_from_slice(&mother.drain(0..min).as_slice());
+        dbg!("ok");
+        // The upper portion
+        dbg!("copying lower");
+        son[max..].copy_from_slice(&father.drain(..).as_slice());
+        son[max..].copy_from_slice(&mother.drain(..).as_slice());
+        dbg!("ok");
 
         let mut son = Chromosome::new(son);
         let mut daughter = Chromosome::new(daughter);
@@ -82,6 +110,7 @@ impl Chromosome {
 
         let mut rng = thread_rng();
 
+        dbg!(self.solution.len());
         let index_distribution = Uniform::from(0..self.solution.len());
         let rand_maybe = rng.gen_range(0..100);
 
@@ -89,8 +118,7 @@ impl Chromosome {
             for _ in 0..3 {
                 let a = index_distribution.sample(&mut rng);
                 let b = index_distribution.sample(&mut rng);
-                // FIXME
-                // self.solution.swap(a, b);
+                self.solution.swap(a, b)
             }
         }
 
