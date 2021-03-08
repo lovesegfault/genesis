@@ -44,7 +44,6 @@ impl Chromosome {
 
     pub fn crossover(self, other: Self) -> (Self, Self) {
         // First we clone the father and mother strings.
-        // We only need to clone so that we can rotate later. I'd like to get rid of this.
         let mut father = self.solution;
         let mut mother = other.solution;
 
