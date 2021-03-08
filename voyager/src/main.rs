@@ -7,8 +7,9 @@ use rand::{distributions::WeightedIndex, prelude::*};
 use rayon::prelude::*;
 use sdl2::{event::Event, keyboard::Keycode, pixels::Color, rect::Rect};
 
+const TSP_STOPS: usize = 5;
 const GENERATION_SIZE: usize = 256;
-const PARENT_SURVIVAL_RATE: f64 = 0.1;
+const PARENT_SURVIVAL_RATE: f64 = 0.01;
 const PARENTS_SUVIVE: usize = GENERATION_SIZE / (PARENT_SURVIVAL_RATE * 100.0) as usize;
 
 const GRID_CELL_SIZE: i32 = 5;
@@ -34,7 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let travel_map = map::random_map(
         (WINDOW_WIDTH - GRID_CELL_SIZE) as u32,
         (WINDOW_HEIGHT - GRID_CELL_SIZE) as u32,
-        15,
+        TSP_STOPS,
     );
     let mut parents: Vec<Chromosome> = std::iter::repeat_with(|| Chromosome::random(&travel_map))
         .take(GENERATION_SIZE)
@@ -74,9 +75,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     ..
                 } => break 'running,
                 Event::KeyDown {
-                    keycode: Some(Keycode::S),
+                    keycode: Some(Keycode::R),
                     ..
-                } => {}
+                } => {
+                    let travel_map = map::random_map(
+                        (WINDOW_WIDTH - GRID_CELL_SIZE) as u32,
+                        (WINDOW_HEIGHT - GRID_CELL_SIZE) as u32,
+                        TSP_STOPS,
+                    );
+                    parents = std::iter::repeat_with(|| Chromosome::random(&travel_map))
+                        .take(GENERATION_SIZE)
+                        .collect();
+                    children.clear();
+                }
                 _ => {}
             }
         }
