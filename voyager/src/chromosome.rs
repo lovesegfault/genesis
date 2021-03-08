@@ -93,26 +93,81 @@ impl Chromosome {
 
     #[inline]
     pub fn mutate(&mut self) {
-        use rand::distributions::Uniform;
         let mut rng = thread_rng();
         let rand_maybe = rng.gen_range(0..100);
 
-        // We only mutate with a 80% probability
-        if rand_maybe <= 80 {
-            let mut mutated = self.clone();
-            let index_distribution = Uniform::from(0..self.solution.len());
-            let swaps = rng.gen_range(0..(self.solution.len() / 2));
-            for _ in 0..swaps {
-                let a = index_distribution.sample(&mut rng);
-                let b = index_distribution.sample(&mut rng);
-                mutated.solution.swap(a, b)
-            }
-            mutated.score = Self::score(&mutated.solution);
+        // We swap mutate with a 80% probability
+        if rand_maybe < 80 {
+            Self::random_swap(self);
+        }
 
-            // We allow worse mutations to survive 10% of the time
-            if mutated.score < self.score || rand_maybe < 10 {
-                std::mem::swap(self, &mut mutated);
+        // We apply the NN-mutation with 30% probability
+        if rand_maybe < 30 {
+            Self::nearest_neighbor(self);
+        }
+    }
+
+    #[inline]
+    fn random_swap(&mut self) {
+        use rand::distributions::Uniform;
+        let mut rng = thread_rng();
+        let mut mutated = self.clone();
+        let index_distribution = Uniform::from(0..self.solution.len());
+        let swaps = rng.gen_range(0..(self.solution.len() / 2));
+        for _ in 0..swaps {
+            let a = index_distribution.sample(&mut rng);
+            let b = index_distribution.sample(&mut rng);
+            mutated.solution.swap(a, b)
+        }
+        mutated.score = Self::score(&mutated.solution);
+
+        // We allow worse mutations to survive 10% of the time
+        if mutated.score > self.score || rng.gen_range(0..100) < 10 {
+            std::mem::swap(self, &mut mutated);
+        }
+    }
+
+    fn nearest_neighbor(&mut self) {
+        fn optimize_subgraph(m: &mut [MapPoint]) {
+            let len = m.len();
+            for idx in 1..len {
+                let reference = m[idx - 1];
+                let best_idx = &m[idx..len]
+                    .into_par_iter()
+                    .enumerate()
+                    .min_by_key(|(_, e)| e.distance_to(reference))
+                    .map(|(idx, _)| idx)
+                    .unwrap();
+                m.swap(idx, *best_idx);
             }
+        }
+
+        let mut rng = thread_rng();
+        let mut mutated = self.clone();
+        let graph = &mut mutated.solution;
+        // We only apply the heuristc to a subgraph representing about 1/3 of the overall TSP
+        let subgraph_len = graph.len() / 3;
+
+        let pivot_point = rng.gen_range(0..graph.len());
+        // Either our pivot point has enough headroom that we can have a simple subgraph,
+        // or we need to construct the subgraph from an end portion and a start portion.
+        if pivot_point + subgraph_len < graph.len() {
+            optimize_subgraph(&mut graph[pivot_point..(pivot_point + subgraph_len)]);
+        } else {
+            let mut subgraph = Map::from(vec![MapPoint::default(); subgraph_len]);
+            let end_len = graph.len() - pivot_point;
+            subgraph[0..end_len].copy_from_slice(&graph[pivot_point..]);
+            let start_len = subgraph_len - end_len;
+            subgraph[end_len..(end_len + start_len)].copy_from_slice(&graph[0..start_len]);
+            optimize_subgraph(&mut subgraph);
+            graph[pivot_point..].copy_from_slice(&subgraph[0..end_len]);
+            graph[0..start_len].copy_from_slice(&subgraph[end_len..(end_len + start_len)]);
+        }
+
+        mutated.score = Self::score(&graph);
+        // We allow worse mutations to survive 10% of the time
+        if mutated.score > self.score || rng.gen_range(0..100) < 10 {
+            std::mem::swap(self, &mut mutated);
         }
     }
 }
