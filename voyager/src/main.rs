@@ -2,6 +2,7 @@ mod chromosome;
 mod map;
 
 use chromosome::Chromosome;
+use indicatif::{ProgressBar, ProgressStyle};
 use itertools::Itertools;
 use rand::{distributions::WeightedIndex, prelude::*};
 use rayon::prelude::*;
@@ -62,6 +63,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut canvas = window.into_canvas().accelerated().build()?;
 
+    let pb = ProgressBar::new_spinner().with_style(
+        ProgressStyle::default_spinner().template("{elapsed_precise} | {per_sec} | {wide_msg}"),
+    );
+
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -91,6 +96,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 _ => {}
             }
         }
+        pb.set_message(&format!("cost: {}", parents[0].score));
+
         canvas.set_draw_color(COLOR_BACKGROUND);
         canvas.clear();
 
@@ -137,8 +144,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         std::mem::swap(&mut parents, &mut children);
-        eprintln!("BEST: {}", parents[0].score);
         children.clear();
+        pb.inc(1);
     }
+    pb.finish();
     Ok(())
 }
