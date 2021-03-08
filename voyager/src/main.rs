@@ -33,43 +33,44 @@ fn point_to_rect(point: &map::MapPoint) -> Rect {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // First we create a random map of the appropriate size
     let travel_map = map::random_map(
         (WINDOW_WIDTH - GRID_CELL_SIZE) as u32,
         (WINDOW_HEIGHT - GRID_CELL_SIZE) as u32,
         TSP_STOPS,
     );
+    // We fill the parent generation with random permutations of the initial travel_map
     let mut parents: Vec<Chromosome> = std::iter::repeat_with(|| Chromosome::random(&travel_map))
         .take(GENERATION_SIZE)
         .collect();
+    // Children start empty, they're used dduring crossover
     let mut children: Vec<Chromosome> = Vec::with_capacity(GENERATION_SIZE);
 
+    // SDL windowing nonsense
     sdl2::hint::set("SDL_HINT_RENDER_SCALE_QUALITY", "1");
-
     let ctx = sdl2::init()?;
-
     let mut event_pump = ctx.event_pump()?;
-
     let video_subsys = ctx.video()?;
-
     let gl_attr = video_subsys.gl_attr();
     gl_attr.set_multisample_buffers(1);
     gl_attr.set_multisample_samples(8);
-
     let window = video_subsys
         .window("voyager", WINDOW_WIDTH as u32, WINDOW_HEIGHT as u32)
         .opengl()
         .position_centered()
         .build()?;
-
     let mut canvas = window.into_canvas().accelerated().build()?;
 
+    // Our progress spinner
     let pb = ProgressBar::new_spinner().with_style(
         ProgressStyle::default_spinner().template("{elapsed_precise} | {per_sec} | {wide_msg}"),
     );
 
+    // The main event loop
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
+                // Esc and Q exit
                 Event::Quit { .. }
                 | Event::KeyDown {
                     keycode: Some(Keycode::Escape),
@@ -79,6 +80,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     keycode: Some(Keycode::Q),
                     ..
                 } => break 'running,
+                // R generates a new random travel_map and resets the program
                 Event::KeyDown {
                     keycode: Some(Keycode::R),
                     ..
@@ -99,9 +101,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         pb.set_message(&format!("score: {}", parents[0].score));
 
+        // Plot the points
         canvas.set_draw_color(COLOR_BACKGROUND);
         canvas.clear();
-
         canvas.set_draw_color(COLOR_ENTITY);
         parents[0]
             .solution
@@ -109,8 +111,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map(point_to_rect)
             .try_for_each(|rect| canvas.fill_rect(rect))?;
 
+        // Plot the paths
         canvas.set_draw_color(COLOR_PATH);
-
         parents[0]
             .solution
             .iter()
@@ -118,12 +120,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map(|p| (point_to_rect(&p.0), point_to_rect(&p.1)))
             .map(|p| (p.0.center(), p.1.center()))
             .try_for_each(|(a, b)| canvas.draw_line(a, b))?;
-
         canvas.present();
 
+        // Sort by the smallest score
         parents.par_sort_unstable_by(|a, b| a.cmp(b).reverse());
+        // Copy the N best to the children set unchanged
         children.extend_from_slice(&parents[0..PARENTS_SUVIVE]);
 
+        // Crossover the remaining parents into children
         let remainder = GENERATION_SIZE - PARENTS_SUVIVE;
         let score: Vec<f64> = parents.iter().map(|c| c.score).collect();
         let dist = WeightedIndex::new(&score)?;
@@ -144,6 +148,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .flat_map(|(a, b)| rayon::iter::once(a).chain(rayon::iter::once(b))),
         );
 
+        // Cleanup and continue
         std::mem::swap(&mut parents, &mut children);
         children.clear();
         pb.inc(1);
