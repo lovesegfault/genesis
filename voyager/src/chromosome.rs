@@ -94,25 +94,25 @@ impl Chromosome {
     #[inline]
     pub fn mutate(&mut self) {
         use rand::distributions::Uniform;
-
         let mut rng = thread_rng();
-
-        let index_distribution = Uniform::from(0..self.solution.len());
         let rand_maybe = rng.gen_range(0..100);
 
+        // We only mutate with a 80% probability
         if rand_maybe <= 80 {
-            let swaps = match self.solution.len() / 2 {
-                0 => 2,
-                x => x,
-            };
+            let mut mutated = self.clone();
+            let index_distribution = Uniform::from(0..self.solution.len());
+            let swaps = rng.gen_range(0..(self.solution.len() / 2));
             for _ in 0..swaps {
                 let a = index_distribution.sample(&mut rng);
                 let b = index_distribution.sample(&mut rng);
-                self.solution.swap(a, b)
+                mutated.solution.swap(a, b)
+            }
+            mutated.score = Self::score(&mutated.solution);
+
+            if mutated.score < self.score {
+                std::mem::swap(self, &mut mutated);
             }
         }
-
-        self.score = Self::score(&self.solution);
     }
 }
 
