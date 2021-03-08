@@ -92,6 +92,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .take(GENERATION_SIZE)
                         .collect();
                     children.clear();
+                    pb.reset();
                 }
                 _ => {}
             }
