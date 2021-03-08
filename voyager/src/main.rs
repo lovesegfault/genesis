@@ -7,9 +7,9 @@ use rand::{distributions::WeightedIndex, prelude::*};
 use rayon::prelude::*;
 use sdl2::{event::Event, keyboard::Keycode, pixels::Color, rect::Rect};
 
-const TSP_STOPS: usize = 5;
+const TSP_STOPS: usize = 150;
 const GENERATION_SIZE: usize = 256;
-const PARENT_SURVIVAL_RATE: f64 = 0.01;
+const PARENT_SURVIVAL_RATE: f64 = 0.1;
 const PARENTS_SUVIVE: usize = GENERATION_SIZE / (PARENT_SURVIVAL_RATE * 100.0) as usize;
 
 const GRID_CELL_SIZE: i32 = 5;
@@ -99,8 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .solution
             .iter()
             .map(point_to_rect)
-            .map(|rect| canvas.fill_rect(rect))
-            .collect::<Result<(), String>>()?;
+            .try_for_each(|rect| canvas.fill_rect(rect))?;
 
         canvas.set_draw_color(COLOR_PATH);
 
@@ -110,8 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .tuple_windows::<(_, _)>()
             .map(|p| (point_to_rect(&p.0), point_to_rect(&p.1)))
             .map(|p| (p.0.center(), p.1.center()))
-            .map(|(a, b)| canvas.draw_line(a, b))
-            .collect::<Result<(), String>>()?;
+            .try_for_each(|(a, b)| canvas.draw_line(a, b))?;
 
         canvas.present();
 

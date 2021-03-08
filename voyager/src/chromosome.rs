@@ -1,6 +1,6 @@
-use crate::map::{Map, MapPoint};
-use itertools::Itertools;
+use crate::map::{Map, MapPoint, MapSpace};
 use rand::prelude::*;
+use rayon::prelude::*;
 
 #[derive(Clone, Debug)]
 pub struct Chromosome {
@@ -23,15 +23,20 @@ impl Chromosome {
 
     #[inline(always)]
     fn score(path: &Map) -> f64 {
-        let cost: f64 = path
-            .0
-            .iter()
-            .map(|point| (point.x.into_inner(), point.y.into_inner()))
-            .map(|(x, y)| -> euclid::Point2D<f64, ()> { euclid::Point2D::new(x, y) })
-            .tuple_windows::<(_, _)>()
+        path.0
+            .par_windows(2)
+            .map(|window| {
+                fn repack_point<P: Into<f64>>(
+                    p: euclid::Point2D<P, MapSpace>,
+                ) -> euclid::Point2D<f64, MapSpace> {
+                    let x = p.x.into();
+                    let y = p.y.into();
+                    euclid::Point2D::new(x, y)
+                }
+                (repack_point(window[0]), repack_point(window[1]))
+            })
             .map(|subpath| subpath.0.distance_to(subpath.1))
-            .sum();
-        cost
+            .sum()
     }
 
     pub fn crossover(self, other: Self) -> (Self, Self) {
@@ -81,8 +86,8 @@ impl Chromosome {
         son[..min].copy_from_slice(&father.drain(..).as_slice());
         daughter[..min].copy_from_slice(&mother.drain(..).as_slice());
 
-        let mut son = Chromosome::new(son.into());
-        let mut daughter = Chromosome::new(daughter.into());
+        let mut son = Chromosome::new(son);
+        let mut daughter = Chromosome::new(daughter);
 
         // Lastly, we randomly mutate the children before returning
         son.mutate();
@@ -101,7 +106,7 @@ impl Chromosome {
         let rand_maybe = rng.gen_range(0..100);
 
         if rand_maybe <= 80 {
-            let swaps = match self.solution.len() / 4 {
+            let swaps = match self.solution.len() / 2 {
                 0 => 2,
                 x => x,
             };
@@ -132,7 +137,7 @@ impl Ord for Chromosome {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.score
             .partial_cmp(&other.score)
-            .unwrap_or_else(|| std::cmp::Ordering::Less)
+            .unwrap_or(std::cmp::Ordering::Less)
     }
 }
 
