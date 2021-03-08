@@ -120,6 +120,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map(|p| (point_to_rect(&p.0), point_to_rect(&p.1)))
             .map(|p| (p.0.center(), p.1.center()))
             .try_for_each(|(a, b)| canvas.draw_line(a, b))?;
+        // Plot the closing path
+        let start = point_to_rect(&parents[0].solution[0]).center();
+        let end = point_to_rect(&parents[0].solution.last().unwrap()).center();
+        canvas.draw_line(start, end)?;
         canvas.present();
 
         // Sort by the smallest score

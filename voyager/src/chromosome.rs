@@ -23,21 +23,22 @@ impl Chromosome {
 
     #[inline(always)]
     fn score(path: &Map) -> f64 {
-        let cost: f64 = path
+        fn repack_point<P: Into<f64>>(
+            p: euclid::Point2D<P, MapSpace>,
+        ) -> euclid::Point2D<f64, MapSpace> {
+            let x = p.x.into();
+            let y = p.y.into();
+            euclid::Point2D::new(x, y)
+        }
+        let mut cost: f64 = path
             .0
             .par_windows(2)
-            .map(|window| {
-                fn repack_point<P: Into<f64>>(
-                    p: euclid::Point2D<P, MapSpace>,
-                ) -> euclid::Point2D<f64, MapSpace> {
-                    let x = p.x.into();
-                    let y = p.y.into();
-                    euclid::Point2D::new(x, y)
-                }
-                (repack_point(window[0]), repack_point(window[1]))
-            })
+            .map(|window| (repack_point(window[0]), repack_point(window[1])))
             .map(|subpath| subpath.0.distance_to(subpath.1))
             .sum();
+        let start = repack_point(path.0[0]);
+        let end = repack_point(*path.0.last().unwrap());
+        cost += end.distance_to(start);
         1.0 / cost
     }
 
