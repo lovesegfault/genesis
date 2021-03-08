@@ -97,7 +97,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 _ => {}
             }
         }
-        pb.set_message(&format!("cost: {}", parents[0].score));
+        pb.set_message(&format!("score: {}", parents[0].score));
 
         canvas.set_draw_color(COLOR_BACKGROUND);
         canvas.clear();
