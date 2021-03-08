@@ -110,7 +110,8 @@ impl Chromosome {
             }
             mutated.score = Self::score(&mutated.solution);
 
-            if mutated.score < self.score {
+            // We allow worse mutations to survive 10% of the time
+            if mutated.score < self.score || rand_maybe < 10 {
                 std::mem::swap(self, &mut mutated);
             }
         }
